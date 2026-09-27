@@ -1,0 +1,42 @@
+{
+  "id": "contador",
+  "versaoDoContrato": 1,
+  "camada": "primeira-parte",
+  "nome": {
+    "pt-BR": "Contador",
+    "en-US": "Counter",
+    "es-ES": "Contador",
+    "fr-FR": "Compteur",
+    "de-DE": "Zähler",
+    "ja-JP": "カウンター",
+    "zh-CN": "计数器",
+    "hi-IN": "काउंटर",
+    "ru-RU": "Счётчик",
+    "ar-AR": "عدّاد"
+  },
+  "descricao": {
+    "pt-BR": "Um contador para o teste do SDK.",
+    "en-US": "A counter for the SDK test.",
+    "es-ES": "Un contador para la prueba del SDK.",
+    "fr-FR": "Un compteur pour le test du SDK.",
+    "de-DE": "Ein Zähler für den SDK-Test.",
+    "ja-JP": "SDK テスト用のカウンター。",
+    "zh-CN": "用于 SDK 测试的计数器。",
+    "hi-IN": "SDK परीक्षण के लिए एक काउंटर।",
+    "ru-RU": "Счётчик для теста SDK.",
+    "ar-AR": "عدّاد لاختبار SDK."
+  },
+  "icone": "public/icone.svg",
+  "cor": "#ff9500",
+  "categoria": "utilities",
+  "janela": {
+    "largura": 320,
+    "altura": 240,
+    "minLargura": 240,
+    "minAltura": 200,
+    "maximizavel": false
+  },
+  "capacidades": [],
+  "autor": "Roque Ribeiro",
+  "licenca": "MIT"
+}

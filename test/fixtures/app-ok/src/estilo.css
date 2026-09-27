@@ -1,0 +1,4 @@
+.contador {
+  --contador-fundo: rgba(var(--ros-black-rgb), 0.4);
+  border: 1px solid var(--ros-border-dim);
+}

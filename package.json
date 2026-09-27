@@ -1,0 +1,46 @@
+{
+  "name": "@roqueos-apps/app-sdk",
+  "version": "0.1.0",
+  "description": "O contrato entre o RoqueOS e um app: definirApp, as capacidades do sistema, o manifesto app.json, um sistema para rodar o app sozinho, um sistema falso para teste e o app check.",
+  "license": "MIT",
+  "author": "Roque Ribeiro",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roqueos-apps/app-sdk.git"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./sistema-de-desenvolvimento": "./src/host/desenvolvimento.js",
+    "./sistema-falso": "./src/host/falso.js",
+    "./armazenamento": "./src/host/armazenamento.js",
+    "./verificacao": "./src/verificacao.js"
+  },
+  "bin": {
+    "app": "./bin/app.mjs"
+  },
+  "files": [
+    "src",
+    "bin",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "yarn@1.22.22",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "app:check": "node bin/app.mjs check --sdk",
+    "verificar": "yarn lint && yarn format:check && yarn test && yarn app:check"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.14.0",
+    "eslint": "9.14.0",
+    "globals": "16.4.0",
+    "prettier": "3.3.3"
+  }
+}
