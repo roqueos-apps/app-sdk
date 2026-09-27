@@ -102,7 +102,8 @@ erro de digitação não ser ignorado em silêncio.
 Um app de primeira parte está no mesmo documento do RoqueOS e enxerga as custom properties
 do tema. Usar uma delas é dependência de verdade que nenhum grafo de build vê, então ela vira
 contrato: [`src/variaveis.js`](src/variaveis.js) lista as que um app pode usar
-(`--ros-white-rgb`, `--ros-black-rgb`, `--ros-border-dim`), o `app check` reprova qualquer
+(`--ros-white-rgb`, `--ros-black-rgb`, `--ros-border-dim`, `--ros-text-100`, `--ros-shadow-30`
+e `--ros-shadow-50`), o `app check` reprova qualquer
 outra, e o RoqueOS tem um teste que reprova se alguma delas sumir do tema. O prefixo `--ros-`
 é do sistema: a variável do app usa outro (`--calc-fundo`).
 

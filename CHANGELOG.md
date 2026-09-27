@@ -15,8 +15,9 @@ nova e opcional é versão menor; mudar a forma de uma capacidade é versão nov
 - `validarManifesto` para o `app.json`: id permanente, camada (`primeira-parte` ou
   `comunidade`), nome e descrição nos idiomas da camada, ícone, cor, categoria (sem `system`),
   janela, capacidades, autor e licença. Campo desconhecido reprova.
-- `VARIAVEIS_DO_SISTEMA`: as três variáveis CSS do tema do RoqueOS que um app pode usar
-  (`--ros-white-rgb`, `--ros-black-rgb`, `--ros-border-dim`).
+- `VARIAVEIS_DO_SISTEMA`: as seis variáveis CSS do tema do RoqueOS que um app pode usar, as
+  que a Calculadora usa (`--ros-white-rgb`, `--ros-black-rgb`, `--ros-border-dim`,
+  `--ros-text-100`, `--ros-shadow-30`, `--ros-shadow-50`).
 - Sistema de desenvolvimento com `montarNaJanelaFalsa` (tamanho do manifesto, nome no idioma,
   seletor dos dez idiomas, árabe em RTL, `?idioma=` na URL) e sistema falso para teste.
 - `app check`: scripts de instalação, manifesto, textos nos idiomas, origem dos assets, sem

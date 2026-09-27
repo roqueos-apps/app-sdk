@@ -13,7 +13,7 @@
 //   - no RoqueOS, um teste reprova quando alguma destas deixa de existir no
 //     `:root` do tema.
 //
-// A lista nasce com o que tem uso (as três da Calculadora) e cresce com o kit
+// A lista nasce com o que tem uso (as seis da Calculadora) e cresce com o kit
 // de interface. Variável nova aqui é mudança menor; tirar uma é quebra.
 //
 // O prefixo `--ros-` é do sistema. A variável que é do app usa outro prefixo
@@ -27,4 +27,9 @@ export const VARIAVEIS_DO_SISTEMA = Object.freeze([
   '--ros-black-rgb',
   // A borda discreta do tema, que já leva o alpha e muda com o tema claro.
   '--ros-border-dim',
+  // O texto principal do tema (claro no escuro, escuro no claro).
+  '--ros-text-100',
+  // As sombras do tema, com o alpha já dentro: 30% e 50%.
+  '--ros-shadow-30',
+  '--ros-shadow-50',
 ])
