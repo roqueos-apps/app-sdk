@@ -15,10 +15,11 @@
 // revisão no merge e do pin exato de versão no RoqueOS. A fronteira de verdade
 // é a do modo comunidade (iframe em outra origem), que usa este mesmo contrato.
 //
-// Por que estas cinco, e não mais: são as cinco que o `@roqueos-games/jogo-sdk`
-// já prova em vinte jogos, com a mesma forma e o mesmo motivo. Capacidade nova
-// nasce opcional, na onda do primeiro app que precisa dela, com motivo escrito;
-// capacidade sem motivo vira atalho para o app alcançar o que não devia.
+// Por que estas seis, e não mais: são capacidades que o `@roqueos-games/jogo-sdk`
+// já prova em vinte jogos, com a mesma forma e o mesmo motivo, e que um app de
+// qualquer tipo usa. Capacidade nova nasce opcional, na onda do primeiro app que
+// precisa dela, com motivo escrito; capacidade sem motivo vira atalho para o app
+// alcançar o que não devia.
 //
 // Versionamento: capacidade nova e opcional é mudança menor; mudar a forma de
 // uma que existe é versão nova do contrato, e o sistema recusa o app que pede
@@ -51,6 +52,12 @@ export const CAPACIDADES = Object.freeze({
     forma: { atual: FN, aoMudar: FN },
     porque:
       'atual() devolve um dos dez idiomas; aoMudar(fn) avisa a troca com a janela aberta e devolve parar(). O texto do app mora no app e desce quando ele monta, não no pacote de entrada do RoqueOS.',
+  },
+  desempenho: {
+    obrigatoria: true,
+    forma: { modoLeve: FN },
+    porque:
+      'modoLeve() diz se o aparelho pede o perfil leve: sem efeito que segue o sensor, sem animação contínua, sem sombra pesada. O RoqueOS decide isso uma vez, para o sistema inteiro; o app que lê o atributo do documento por conta própria depende de um detalhe do RoqueOS que ninguém trava, e o app que ignora derruba o aparelho fraco.',
   },
   metricas: {
     obrigatoria: true,

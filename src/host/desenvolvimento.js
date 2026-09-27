@@ -42,6 +42,13 @@ export function criarSistemaDeDesenvolvimento({
       return null
     }
   })()
+  const daUrlLeve = (() => {
+    try {
+      return new URL(janela.location?.href ?? '').searchParams.get('leve') === '1'
+    } catch {
+      return false
+    }
+  })()
   let idiomaAtual = normalizarIdioma(idioma ?? daUrl ?? nav.language)
   const ouvintesDeIdioma = new Set()
   const avisarIdioma = () => {
@@ -70,6 +77,16 @@ export function criarSistemaDeDesenvolvimento({
       aoMudar(fn) {
         ouvintesDeIdioma.add(fn)
         return () => ouvintesDeIdioma.delete(fn)
+      },
+    },
+    // O mesmo critério do jogo-sdk: tela de toque ou pouca memória pede o perfil leve.
+    // `?leve=1` na URL força, para quem desenvolve ver o app como o aparelho fraco vê.
+    desempenho: {
+      modoLeve() {
+        if (daUrlLeve) return true
+        const toque = janela.matchMedia?.('(pointer: coarse)')?.matches === true
+        const memoriaCurta = typeof nav.deviceMemory === 'number' && nav.deviceMemory <= 4
+        return toque || memoriaCurta
       },
     },
     metricas: {

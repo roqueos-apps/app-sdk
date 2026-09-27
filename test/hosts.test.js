@@ -126,6 +126,32 @@ describe('sistema de desenvolvimento', () => {
     ])
   })
 
+  test('modo leve: toque ou pouca memória, e ?leve=1 força', () => {
+    const forte = criarSistemaDeDesenvolvimento({
+      appId: 'calc',
+      janela: janelaFalsa(),
+      registro: silencioso,
+    })
+    assert.equal(forte.sistema.desempenho.modoLeve(), false)
+    const toque = janelaFalsa()
+    toque.matchMedia = (q) => ({ matches: q === '(pointer: coarse)' })
+    assert.equal(
+      criarSistemaDeDesenvolvimento({
+        appId: 'calc',
+        janela: toque,
+        registro: silencioso,
+      }).sistema.desempenho.modoLeve(),
+      true,
+    )
+    const forcado = criarSistemaDeDesenvolvimento({
+      appId: 'calc',
+      janela: janelaFalsa({ href: 'http://localhost:5173/?leve=1' }),
+      registro: silencioso,
+    })
+    assert.equal(forcado.sistema.desempenho.modoLeve(), true)
+    assert.equal(criarSistemaFalso({ modoLeve: true }).sistema.desempenho.modoLeve(), true)
+  })
+
   test('id fora do formato é recusado', () => {
     assert.throws(() => criarSistemaDeDesenvolvimento({ appId: 'Calc' }), TypeError)
   })

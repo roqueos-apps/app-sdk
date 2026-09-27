@@ -9,12 +9,13 @@ import { IDIOMA_CANONICO, normalizarIdioma } from '../idiomas.js'
 import { armazenamentoDoApp, armazenamentoEmMemoria } from './armazenamento.js'
 
 /**
- * @param {{ appId?: string, idioma?: string, identidade?: { uid: string|null, nome: string|null } }} [opcoes]
+ * @param {{ appId?: string, idioma?: string, identidade?: { uid: string|null, nome: string|null }, modoLeve?: boolean }} [opcoes]
  */
 export function criarSistemaFalso({
   appId = 'teste',
   idioma = IDIOMA_CANONICO,
   identidade = { uid: null, nome: null },
+  modoLeve = false,
 } = {}) {
   let idiomaAtual = normalizarIdioma(idioma)
   let quem = { ...identidade }
@@ -40,6 +41,9 @@ export function criarSistemaFalso({
     idioma: {
       atual: () => idiomaAtual,
       aoMudar: ouvir(ouvintesDeIdioma),
+    },
+    desempenho: {
+      modoLeve: () => modoLeve,
     },
     metricas: {
       evento(nome, dados = {}) {

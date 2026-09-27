@@ -52,15 +52,16 @@ flowchart LR
 Estão em [`src/contrato.js`](src/contrato.js), cada uma com o motivo de existir. O motivo é
 parte do contrato: capacidade sem motivo vira atalho para o app alcançar o que não devia.
 
-| Capacidade      | Forma                              | Para quê                                                       |
-| --------------- | ---------------------------------- | -------------------------------------------------------------- |
-| `identidade`    | `atual()`, `aoMudar(fn)`           | `{ uid, nome }`, ou `{ uid: null, nome: null }` para convidado |
-| `avisar`        | `avisar(mensagem, { tipo, fixo })` | o que a pessoa precisa ler; `fixo: true` fica até ela fechar   |
-| `idioma`        | `atual()`, `aoMudar(fn)`           | um dos dez idiomas; a troca chega com a janela aberta          |
-| `metricas`      | `evento(nome, dados)`              | uso, com nomes de evento que não mudam sem motivo              |
-| `armazenamento` | `ler`, `gravar`, `apagar`          | texto no espaço `roqueos:<app>:<chave>`, no aparelho           |
+| Capacidade      | Forma                              | Para quê                                                                            |
+| --------------- | ---------------------------------- | ----------------------------------------------------------------------------------- |
+| `identidade`    | `atual()`, `aoMudar(fn)`           | `{ uid, nome }`, ou `{ uid: null, nome: null }` para convidado                      |
+| `avisar`        | `avisar(mensagem, { tipo, fixo })` | o que a pessoa precisa ler; `fixo: true` fica até ela fechar                        |
+| `idioma`        | `atual()`, `aoMudar(fn)`           | um dos dez idiomas; a troca chega com a janela aberta                               |
+| `desempenho`    | `modoLeve()`                       | o aparelho pede o perfil leve: sem efeito que segue o sensor, sem animação contínua |
+| `metricas`      | `evento(nome, dados)`              | uso, com nomes de evento que não mudam sem motivo                                   |
+| `armazenamento` | `ler`, `gravar`, `apagar`          | texto no espaço `roqueos:<app>:<chave>`, no aparelho                                |
 
-As cinco são as que o `jogo-sdk` já prova em vinte jogos. Capacidade nova (`arquivos`,
+As seis vêm do `jogo-sdk`, que as prova em vinte jogos. Capacidade nova (`arquivos`,
 `abrirCom`, `servidor`, `ia`, câmera) nasce **opcional**, na onda do primeiro app que precisa
 dela, com motivo escrito. Mudar a forma de uma que existe é versão nova do contrato, e o
 sistema recusa o app que pede outra versão em vez de quebrar em runtime.
@@ -149,7 +150,7 @@ montarNaJanelaFalsa(app, { manifesto })
 
 A janela tem o tamanho do `app.json`, o nome no idioma atual e um seletor dos dez idiomas. O
 árabe vira da direita para a esquerda, como no RoqueOS, e `?idioma=ja-JP` na URL abre direto
-em outro idioma. No teste, `criarSistemaFalso()` devolve o `sistema` e o que o app fez
+em outro idioma, e `?leve=1` mostra o app como o aparelho fraco vê. No teste, `criarSistemaFalso()` devolve o `sistema` e o que o app fez
 (`registro.avisos`, `registro.eventos`), e troca idioma e conta com a janela aberta
 (`mudarIdioma`, `mudarIdentidade`).
 
@@ -206,9 +207,10 @@ on instead of RoqueOS. It is the sibling of `jogo-sdk`, which did the same for g
   and refuses one that breaks the contract, listing every problem.
 - `montar(el, sistema, { windowId, ativo })` creates the app's own Vue app inside `el` and
   returns `{ ativar, desmontar }`. No RoqueOS store, plugin or global style reaches inside.
-- Contract v1 has five capabilities, the same ones `jogo-sdk` proves in twenty games:
-  `identidade`, `avisar`, `idioma`, `metricas` and `armazenamento`. New capabilities are born
-  optional, with a written reason, in the wave of the first app that needs them.
+- Contract v1 has six capabilities, taken from `jogo-sdk`, which proves them in twenty games:
+  `identidade`, `avisar`, `idioma`, `desempenho`, `metricas` and `armazenamento`. New
+  capabilities are born optional, with a written reason, in the wave of the first app that
+  needs them.
 - `app.json` declares the permanent `id`, name and description in the ten languages (first
   party) or in pt-BR and en-US (community), icon, colour, category, window size, layer,
   author and licence. Unknown fields fail.

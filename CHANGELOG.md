@@ -10,8 +10,8 @@ nova e opcional é versão menor; mudar a forma de uma capacidade é versão nov
 
 - `definirApp({ id, capacidades, montar })` e o `mount(el, sistema, { windowId, ativo })`, que
   confere o sistema antes de montar e recusa com a lista inteira do que falta.
-- Contrato v1 com cinco capacidades obrigatórias, as mesmas que o `jogo-sdk` prova em vinte
-  jogos: `identidade`, `avisar`, `idioma`, `metricas` e `armazenamento`.
+- Contrato v1 com seis capacidades obrigatórias, vindas do `jogo-sdk`, que as prova em vinte
+  jogos: `identidade`, `avisar`, `idioma`, `desempenho`, `metricas` e `armazenamento`.
 - `validarManifesto` para o `app.json`: id permanente, camada (`primeira-parte` ou
   `comunidade`), nome e descrição nos idiomas da camada, ícone, cor, categoria (sem `system`),
   janela, capacidades, autor e licença. Campo desconhecido reprova.

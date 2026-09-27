@@ -10,8 +10,15 @@ import {
 import { criarSistemaFalso } from '../src/host/falso.js'
 
 describe('o contrato', () => {
-  test('nasce com as cinco capacidades que o jogo-sdk já prova, todas obrigatórias', () => {
-    assert.deepEqual(OBRIGATORIAS, ['identidade', 'avisar', 'idioma', 'metricas', 'armazenamento'])
+  test('nasce com as seis capacidades que o jogo-sdk já prova, todas obrigatórias', () => {
+    assert.deepEqual(OBRIGATORIAS, [
+      'identidade',
+      'avisar',
+      'idioma',
+      'desempenho',
+      'metricas',
+      'armazenamento',
+    ])
     assert.deepEqual(OPCIONAIS, [])
     assert.equal(VERSAO_DO_CONTRATO, 1)
   })
