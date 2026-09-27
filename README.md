@@ -139,7 +139,13 @@ yarn test             # só os testes (node:test, sem dependência)
 node bin/app.mjs check caminho/do/app   # o app check num repo de app
 ```
 
-Num repo de app, o `yarn dev` monta o app na janela falsa:
+Num repo de app, o SDK entra como dependência git pinada por tag, sem registro de pacote:
+
+```json
+{ "dependencies": { "@roqueos-apps/app-sdk": "github:roqueos-apps/app-sdk#v0.1.0" } }
+```
+
+e o `yarn dev` monta o app na janela falsa:
 
 ```js
 import { montarNaJanelaFalsa } from '@roqueos-apps/app-sdk/sistema-de-desenvolvimento'
@@ -220,8 +226,10 @@ on instead of RoqueOS. It is the sibling of `jogo-sdk`, which did the same for g
   internals (`src/`, `stores/`, Quasar) in JavaScript, `.vue` or SCSS, and `--ros-*` CSS
   variables outside the contract list.
 
-Run `yarn install --ignore-scripts` and `yarn verificar`; CI runs the same command. In an app
-repository, `montarNaJanelaFalsa(app, { manifesto })` from
+Run `yarn install --ignore-scripts` and `yarn verificar`; CI runs the same command. An app
+repository depends on the SDK as a git dependency pinned by tag
+(`"@roqueos-apps/app-sdk": "github:roqueos-apps/app-sdk#v0.1.0"`), with no package registry. In
+an app repository, `montarNaJanelaFalsa(app, { manifesto })` from
 `@roqueos-apps/app-sdk/sistema-de-desenvolvimento` mounts the app in a fake RoqueOS window with
 a language picker, including right-to-left Arabic.
 
