@@ -17,6 +17,10 @@
 //   })
 //   painel.fechar()
 //
+// - A `ancora` é um elemento VAZIO do app, que o Vue (ou o que for) do app nunca desenha por
+//   dentro: o sistema põe o painel lá. O painel cobre o contêiner posicionado mais perto dela;
+//   com `display: contents` na âncora, esse contêiner é o pai dela (as Notas fazem assim, com
+//   o corpo do editor em `position: relative`).
 // - Um painel por janela: abrir outro fecha o anterior (e chama o aoFechar dele).
 // - O sistema fecha o painel sozinho quando a janela desmonta.
 // - Fora do RoqueOS (no `yarn dev`) o painel diz que a IA roda dentro do RoqueOS;
