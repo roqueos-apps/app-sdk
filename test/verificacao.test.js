@@ -13,9 +13,11 @@ import {
   conferirAssets,
   conferirScriptsDeInstalacao,
   conferirManifesto,
+  conferirCapacidadesDeclaradas,
   semComentarios,
   ehDoRoqueOS,
 } from '../src/verificacao.js'
+import { VARIAVEIS_DO_SISTEMA } from '../src/variaveis.js'
 
 const FIXTURE = fileURLToPath(new URL('./fixtures/app-ok', import.meta.url))
 
@@ -44,6 +46,7 @@ describe('o app de teste passa inteiro', () => {
         'o app não fala com banco',
         'o app não importa o RoqueOS',
         'variáveis do sistema no contrato',
+        'capacidades opcionais declaradas',
       ],
     )
     for (const s of secoes) assert.deepEqual(s.problemas, [], s.secao)
@@ -195,11 +198,39 @@ describe('cada regra reprova o que diz', () => {
       )
     })
     assert.deepEqual(conferirVariaveis(p), [
-      'src/x.scss:2 usa --ros-accent, que não está entre as variáveis do sistema que um app pode usar (--ros-white-rgb, --ros-black-rgb, --ros-border-dim, --ros-text-100, --ros-shadow-30, --ros-shadow-50)',
+      `src/x.scss:2 usa --ros-accent, que não está entre as variáveis do sistema que um app pode usar (${VARIAVEIS_DO_SISTEMA.join(', ')})`,
       'src/x.scss:3 declara --ros-white-rgb: o prefixo --ros- é do sistema, a variável do app usa outro',
       'src/y.js:1 declara --ros-black-rgb: o prefixo --ros- é do sistema, a variável do app usa outro',
       'src/y.js:2 declara --ros-border-dim: o prefixo --ros- é do sistema, a variável do app usa outro',
     ])
+    rmSync(p, { recursive: true })
+  })
+
+  test('opcional usada sem estar no app.json, em cada forma de uso; declarada passa', () => {
+    const p = copia((d) => {
+      escrever(
+        d,
+        'src/usa.js',
+        [
+          "const notas = sistema.colecoes.abrir('notas')",
+          'sistema?.ia.abrirPainel(pedido)',
+          "sistema['arquivos'].salvar(a)",
+          'const { abertura, idioma } = sistema',
+          '// sistema.ia no comentário não conta',
+          'sistema.idioma.atual()',
+        ].join('\n'),
+      )
+    })
+    assert.deepEqual(conferirCapacidadesDeclaradas(p), [
+      'src/usa.js:1 usa sistema.colecoes sem "colecoes" em capacidades no app.json',
+      'src/usa.js:2 usa sistema.ia sem "ia" em capacidades no app.json',
+      'src/usa.js:3 usa sistema.arquivos sem "arquivos" em capacidades no app.json',
+      'src/usa.js:4 usa sistema.abertura sem "abertura" em capacidades no app.json',
+    ])
+    const m = JSON.parse(readFileSync(join(p, 'app.json'), 'utf8'))
+    m.capacidades = ['colecoes', 'ia', 'arquivos', 'abertura']
+    writeFileSync(join(p, 'app.json'), JSON.stringify(m))
+    assert.deepEqual(conferirCapacidadesDeclaradas(p), [])
     rmSync(p, { recursive: true })
   })
 })

@@ -50,12 +50,14 @@ const CAMPOS = new Set([
   'janela',
   'naLoja',
   'capacidades',
+  'colecoes',
   'autor',
   'licenca',
 ])
 const CAMPOS_DA_JANELA = new Set(['largura', 'altura', 'minLargura', 'minAltura', 'maximizavel'])
 
 const ID = /^[a-z][a-z0-9]*$/
+const NOME_DE_COLECAO = /^[a-z][a-zA-Z0-9]*$/
 const texto = (v) => typeof v === 'string' && v.trim().length > 0
 
 function porIdioma(valor, campo, obrigatorios, problemas) {
@@ -138,6 +140,20 @@ export function validarManifesto(m) {
           (erradas.some((c) => c in CAPACIDADES) ? ' (as obrigatórias o sistema sempre dá)' : ''),
       )
     }
+  }
+
+  // As coleções que o app abre, pelo nome. O RoqueOS confere no build que cada uma
+  // está no mapa dele (onde mora, com que regra de banco); sem esta lista, a coleção
+  // que falta no mapa só aparece quando alguém abre o app.
+  const usaColecoes = Array.isArray(caps) && caps.includes('colecoes')
+  if (m.colecoes !== undefined) {
+    const lista = m.colecoes
+    if (!Array.isArray(lista) || lista.length === 0 || !lista.every((n) => NOME_DE_COLECAO.test(n)))
+      problemas.push('colecoes: lista de nomes (minúsculas e dígitos, camelCase: notas, alarmes)')
+    else if (new Set(lista).size !== lista.length) problemas.push('colecoes: nome repetido')
+    if (!usaColecoes) problemas.push('colecoes declaradas sem "colecoes" em capacidades')
+  } else if (usaColecoes) {
+    problemas.push('capacidades pede "colecoes": liste em "colecoes" os nomes que o app abre')
   }
   return problemas
 }

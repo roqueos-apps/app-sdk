@@ -12,13 +12,28 @@
 
 import { VERSAO_DO_CONTRATO } from '../contrato.js'
 import { IDIOMAS, normalizarIdioma } from '../idiomas.js'
+import { ErroDoSistema } from '../erros.js'
+import { conferirArquivo } from '../arquivos.js'
+import { conferirPedidoDeIa } from '../ia.js'
+import { criarAbertura } from '../abertura.js'
 import { armazenamentoDoApp, armazenamentoEmMemoria, storageDoNavegador } from './armazenamento.js'
+import { criarColecoesEmMemoria } from './colecoes-em-memoria.js'
 
 /** Idiomas que correm da direita para a esquerda. */
 const RTL = new Set(['ar-AR'])
 
 /**
- * @param {{ appId: string, janela?: any, registro?: Pick<Console, 'info'|'debug'>, idioma?: string }} opcoes
+ * A conta de quem desenvolve. No `yarn dev` a pessoa está "entrada" numa conta
+ * local, para a coleção e o salvar em Arquivos funcionarem sem Firebase;
+ * `?convidado=1` na URL mostra o app como o convidado vê.
+ */
+export const CONTA_DE_DESENVOLVIMENTO = Object.freeze({ uid: 'local', nome: 'Você' })
+
+/**
+ * @param {{
+ *   appId: string, janela?: any, registro?: Pick<Console, 'info'|'debug'>, idioma?: string,
+ *   colecoes?: string[],
+ * }} opcoes
  * @returns {{ sistema: object, mudarIdioma: (novo: string) => void }}
  */
 export function criarSistemaDeDesenvolvimento({
@@ -26,6 +41,7 @@ export function criarSistemaDeDesenvolvimento({
   janela = globalThis,
   registro = console,
   idioma,
+  colecoes = [],
 } = {}) {
   if (typeof appId !== 'string' || !/^[a-z][a-z0-9]*$/.test(appId)) {
     throw new TypeError(
@@ -33,22 +49,40 @@ export function criarSistemaDeDesenvolvimento({
     )
   }
   const nav = janela.navigator ?? {}
-  // `?idioma=ja-JP` na URL vence o idioma do navegador: é o jeito de abrir o app
-  // direto em outro idioma, e de mandar o link para quem revisa a tradução.
-  const daUrl = (() => {
+  const parametro = (nome) => {
     try {
-      return new URL(janela.location?.href ?? '').searchParams.get('idioma')
+      return new URL(janela.location?.href ?? '').searchParams.get(nome)
     } catch {
       return null
     }
-  })()
-  const daUrlLeve = (() => {
-    try {
-      return new URL(janela.location?.href ?? '').searchParams.get('leve') === '1'
-    } catch {
-      return false
-    }
-  })()
+  }
+  // `?idioma=ja-JP` na URL vence o idioma do navegador: é o jeito de abrir o app
+  // direto em outro idioma, e de mandar o link para quem revisa a tradução.
+  const daUrl = parametro('idioma')
+  const daUrlLeve = parametro('leve') === '1'
+  const quem = parametro('convidado') === '1' ? { uid: null, nome: null } : CONTA_DE_DESENVOLVIMENTO
+  // `?abertura={"nota":"x"}` abre o app como se outro pedaço do sistema tivesse pedido.
+  const aberta = criarAbertura(
+    (() => {
+      try {
+        return JSON.parse(parametro('abertura') ?? '{}')
+      } catch {
+        return {}
+      }
+    })(),
+  )
+  const storage = storageDoNavegador(janela) ?? armazenamentoEmMemoria()
+  const memoria = criarColecoesEmMemoria({
+    nomes: colecoes,
+    uidAtual: () => quem.uid,
+    aoMudarConta: () => () => {},
+    // A coleção fica no localStorage, no espaço do app, para continuar depois do F5.
+    persistencia: {
+      ler: (k) => storage.getItem(`roqueos:${appId}:${k}`),
+      gravar: (k, v) => storage.setItem(`roqueos:${appId}:${k}`, v),
+    },
+  })
+  let painel = null
   let idiomaAtual = normalizarIdioma(idioma ?? daUrl ?? nav.language)
   const ouvintesDeIdioma = new Set()
   const avisarIdioma = () => {
@@ -64,13 +98,15 @@ export function criarSistemaDeDesenvolvimento({
   const sistema = {
     versaoDoContrato: VERSAO_DO_CONTRATO,
     identidade: {
-      atual: () => ({ uid: null, nome: null }),
+      atual: () => ({ ...quem }),
       aoMudar: () => () => {},
     },
     // Aqui o aviso é uma linha no console; o fixo sai marcado, para quem
     // desenvolve ver que aquele a pessoa teria de fechar.
-    avisar(mensagem, { tipo = 'info', fixo = false } = {}) {
-      registro.info(`[${appId}] ${tipo}${fixo ? ' (fixo, até a pessoa fechar)' : ''}: ${mensagem}`)
+    avisar(mensagem, { tipo = 'info', fixo = false, titulo } = {}) {
+      registro.info(
+        `[${appId}] ${tipo}${fixo ? ' (fixo, até a pessoa fechar)' : ''}: ${titulo ? `${titulo}: ` : ''}${mensagem}`,
+      )
     },
     idioma: {
       atual: () => idiomaAtual,
@@ -94,14 +130,67 @@ export function criarSistemaDeDesenvolvimento({
         registro.debug(`[${appId}] evento ${nome}`, dados)
       },
     },
-    armazenamento: armazenamentoDoApp(
-      appId,
-      storageDoNavegador(janela) ?? armazenamentoEmMemoria(),
-    ),
+    armazenamento: armazenamentoDoApp(appId, storage),
+    colecoes: { abrir: (nome) => memoria.abrir(nome) },
+    // O painel de IA é do RoqueOS, com os agentes da pessoa. Aqui ele é um aviso
+    // no lugar certo, para quem desenvolve ver onde o painel apareceria.
+    ia: {
+      abrirPainel(pedido) {
+        const p = conferirPedidoDeIa(pedido)
+        painel?.fechar()
+        const doc = p.ancora.ownerDocument ?? janela.document
+        const caixa = doc.createElement('div')
+        caixa.className = 'ros-dev-ia'
+        caixa.setAttribute('role', 'dialog')
+        const texto = doc.createElement('p')
+        texto.textContent =
+          'A IA roda dentro do RoqueOS, com os agentes de quem usa. Aqui no yarn dev o painel é só este aviso.'
+        const botao = doc.createElement('button')
+        botao.textContent = 'Fechar'
+        caixa.append(texto, botao)
+        p.ancora.appendChild(caixa)
+        let aberto = true
+        const este = {
+          fechar() {
+            if (!aberto) return
+            aberto = false
+            caixa.remove?.()
+            if (painel === este) painel = null
+            p.aoFechar?.()
+          },
+        }
+        botao.addEventListener('click', () => este.fechar())
+        painel = este
+        registro.info(`[${appId}] painel de IA (${p.tipo}) aberto`)
+        return Object.freeze({ fechar: () => este.fechar() })
+      },
+    },
+    // Salvar em Arquivos vira download: é o mais perto que o navegador puro chega.
+    arquivos: {
+      async salvar(pedido) {
+        const a = conferirArquivo(pedido)
+        if (!quem.uid) throw new ErroDoSistema('sem-conta')
+        const URLs = janela.URL
+        if (typeof URLs?.createObjectURL === 'function' && janela.document) {
+          const blob =
+            typeof a.conteudo === 'string' ? new Blob([a.conteudo], { type: a.tipo }) : a.conteudo
+          const url = URLs.createObjectURL(blob)
+          const link = janela.document.createElement('a')
+          link.href = url
+          link.download = a.nome
+          link.click?.()
+          URLs.revokeObjectURL?.(url)
+        }
+        registro.info(`[${appId}] salvaria em ${a.pasta}/${a.nome}`)
+        return { nome: a.nome, pasta: a.pasta }
+      },
+    },
+    abertura: aberta.abertura,
   }
 
   return {
     sistema,
+    mudarAbertura: (novo) => aberta.mudar(novo),
     mudarIdioma(novo) {
       idiomaAtual = normalizarIdioma(novo)
       avisarIdioma()
@@ -119,6 +208,9 @@ const ESTILO_DA_JANELA = `
 .ros-dev-barra b{flex:1;font-weight:600;text-align:center}
 .ros-dev-barra select{background:#1d2129;color:#e9eaed;border:1px solid #3a4150;border-radius:6px;font-size:12px}
 .ros-dev-palco{position:relative;flex:1;min-height:0}
+.ros-dev-ia{position:absolute;inset:auto 12px 12px 12px;z-index:10;padding:12px 14px;border-radius:10px;
+  background:#262b35;color:#e9eaed;font:13px/1.4 system-ui,sans-serif;box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.ros-dev-ia p{margin:0 0 8px}
 `
 
 /**
@@ -133,6 +225,7 @@ export function montarNaJanelaFalsa(app, { manifesto, alvo, janela = globalThis,
     appId: app.id,
     janela,
     registro,
+    colecoes: manifesto?.colecoes ?? [],
   })
   const estilo = doc.createElement('style')
   estilo.textContent = ESTILO_DA_JANELA

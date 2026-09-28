@@ -42,6 +42,8 @@ describe('sistema falso', () => {
     assert.deepEqual(f.registro, {
       avisos: [{ mensagem: 'salvo', tipo: 'sucesso', fixo: false }],
       eventos: [{ nome: 'abriu', dados: { de: 'teste' } }],
+      arquivos: [],
+      paineis: [],
     })
     f.mudarIdentidade({ uid: 'u1', nome: 'Ana' })
     assert.deepEqual(f.sistema.identidade.atual(), { uid: 'u1', nome: 'Ana' })

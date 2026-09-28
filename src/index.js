@@ -16,6 +16,12 @@ export { IDIOMAS, IDIOMA_CANONICO, IDIOMA_DE_RECUO, normalizarIdioma } from './i
 export { emModoE2E, estadoE2E } from './e2e.js'
 export { validarManifesto, CATEGORIAS, CAMADAS } from './manifesto.js'
 export { VARIAVEIS_DO_SISTEMA } from './variaveis.js'
+// As peças das opcionais (0.2.0), para os três sistemas conferirem igual.
+export { ErroDoSistema, CODIGOS_DE_ERRO } from './erros.js'
+export { CARIMBOS, conferirCampos, conferirIdDeDocumento } from './colecoes.js'
+export { PASTAS_DE_ARQUIVOS, conferirArquivo } from './arquivos.js'
+export { TIPOS_DE_IA, conferirPedidoDeIa } from './ia.js'
+export { criarAbertura } from './abertura.js'
 
 const ID = /^[a-z][a-z0-9]*$/
 
