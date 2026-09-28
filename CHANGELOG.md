@@ -5,11 +5,11 @@ usa [versionamento semântico](https://semver.org/lang/pt-BR/) sobre o contrato:
 nova e opcional é versão menor, e acrescentar função a uma opcional também; tirar função ou
 mudar a forma ou o sentido de uma capacidade é versão nova do contrato.
 
-## [0.3.0] - sem data até o PR #4 entrar na `main`
+## [0.3.0] - 2026-09-28
 
 O que a Lousa, a Câmera, a Captura de tela, os visualizadores e o Letreiro precisam para sair do
-RoqueOS. O contrato continua o 1: um app 0.2.0 monta igual. A tag só sai depois que a 0.2.0
-entrar na `main` (sem squash) e esta versão for rebaseada sobre ela.
+RoqueOS. O contrato continua o 1: um app 0.2.0 monta igual. A 0.2.0 e a 0.3.0 entraram na
+`main` por merge, sem squash, e por isso os commits das duas tags estão nela.
 
 ### Adicionado
 
@@ -51,7 +51,8 @@ entrar na `main` (sem squash) e esta versão for rebaseada sobre ela.
 - Sistema de desenvolvimento: o que a sessão salvou aparece no `listar`; o app com `abre` ganha
   um "Abrir arquivo" na barra da janela falsa; a tela cheia estica a janela, e Esc sai.
 - `bin/tag-na-main.mjs` e o workflow `tag`: tag de release só em commit que já está na `main`.
-  A v0.2.0 reprova nele (está no commit do PR #4), e é por isso que a regra existe.
+  A v0.2.0 reprovava nele enquanto o commit dela estava só no PR #4, e é por isso que a regra
+  existe; com o PR #4 mergeado sem squash, ela passa.
 
 ### Mudado
 
