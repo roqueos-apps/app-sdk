@@ -2,7 +2,49 @@
 
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), e o projeto
 usa [versionamento semântico](https://semver.org/lang/pt-BR/) sobre o contrato: capacidade
-nova e opcional é versão menor; mudar a forma de uma capacidade é versão nova do contrato.
+nova e opcional é versão menor, e acrescentar função a uma opcional também; tirar função ou
+mudar a forma ou o sentido de uma capacidade é versão nova do contrato.
+
+## [0.3.0] - sem data até o PR #4 entrar na `main`
+
+O que a Câmera, a Captura de tela, os visualizadores, o Letreiro e a Lousa precisam para sair do
+RoqueOS. O contrato continua o 1: um app 0.2.0 monta igual. A tag só sai depois que a 0.2.0
+entrar na `main` (sem squash) e esta versão for rebaseada sobre ela.
+
+### Adicionado
+
+- `arquivos`: `listar(pasta, { tipos })` devolve `[{ ref, nome, tipo, tamanho, modificadoEm }]`,
+  os mais novos primeiro; `ler(ref)` devolve o Blob; `abrirPasta(pasta)` mostra a pasta no
+  Finder. As pastas `Imagens` e `Videos` entram na lista (identificadores sem acento; o nome
+  que a pessoa vê é do sistema). Listar e abrir só a pasta declarada em `pastas` no app.json
+  (`pasta-nao-declarada`); salvar continua livre em qualquer pasta da lista.
+- A ref de arquivo é opaca: presa ao app e à sessão, sem caminho nem nome no texto. Ref
+  fabricada, de outro app ou guardada de ontem rejeita com `ref-invalida`. `criarCofreDeRefs`
+  é o cofre que os três sistemas usam.
+- `salvar` devolve também `ref`, que lê o que acabou de ser salvo.
+- `abertura`: o "abrir com" do Finder chega como `{ arquivo: { ref, nome, tipo } }` ao app que
+  declara o tipo em `abre` no app.json, e esse arquivo o app lê mesmo sem ter declarado a
+  pasta dele.
+- `colecoes.abrir(nome).ler(id)`: um documento só, sem assinar a coleção (null quando não
+  existe ou sem conta). Para documento grande que se abre um de cada vez, como o quadro da Lousa.
+- `janela`, opcional nova: `telaCheia(true | false)` resolve com o estado real,
+  `emTelaCheia()` e `aoMudarTelaCheia(fn)`. É o sistema quem faz a tela cheia, porque no RoqueOS
+  ela escreve no `<html>`, o que um app não pode.
+- `app.json` ganha `pastas` (com `arquivos`) e `abre` (padrões de tipo como `image/*`, com
+  `abertura` e `arquivos`).
+- `app check` reprova `listar('X')` ou `abrirPasta('X')` no `src/` sem `X` em `pastas`.
+- Códigos de erro `pasta-nao-declarada`, `ref-invalida` e `nao-encontrado`.
+- Sistema falso com `pastas` e `telaCheiaPermitida`, `registro.pastasAbertas` e
+  `registro.telaCheia`, `arquivos.semear`/`arquivos.guardados`, `abrirCom` e
+  `telaCheia.sair`/`telaCheia.recusar`.
+- Sistema de desenvolvimento: o que a sessão salvou aparece no `listar`; o app com `abre` ganha
+  um "Abrir arquivo" na barra da janela falsa; a tela cheia estica a janela, e Esc sai.
+- `bin/tag-na-main.mjs` e o workflow `tag`: tag de release só em commit que já está na `main`.
+  A v0.2.0 reprova nele (está no commit do PR #4), e é por isso que a regra existe.
+
+### Mudado
+
+- O texto do contrato diz que acrescentar função a uma opcional é versão menor.
 
 ## [0.2.0] - 2026-09-27
 

@@ -1,0 +1,29 @@
+# A tag de release só em commit que já está na `main` (bin/tag-na-main.mjs).
+#
+# O RoqueOS e os apps pinam o SDK por tag. Tag num commit de branch deixa a família
+# pinada num commit que a `main` pode nunca conter (um merge por squash). Este
+# workflow roda em todo push de tag `v*` e fica vermelho quando a tag está fora da
+# `main`: é o sinal para apagar a tag e refazê-la no commit certo, antes de alguém
+# pinar.
+name: tag
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  na-main:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: A tag está num commit da main
+        run: node bin/tag-na-main.mjs "$GITHUB_SHA" origin/main

@@ -11,6 +11,7 @@
 //
 //   const notas = sistema.colecoes.abrir('notas')   // nome fora do mapa: ErroDoSistema
 //   const parar = notas.observar((docs) => ..., (erro) => ...)
+//   const uma = await notas.ler(id)                 // um documento só, ou null (0.3.0)
 //   await notas.criar(id, campos)                   // grava o documento inteiro
 //   await notas.atualizar(id, campos)               // troca SÓ os campos enviados
 //   await notas.apagar(id)
@@ -30,6 +31,10 @@
 // - A promessa de gravar resolve quando o sistema confirma. Sem rede, isso só
 //   acontece quando a rede volta, mas a lista observada já mostra a mudança na
 //   hora: o app não espera a promessa para mostrar o que a pessoa fez.
+// - `ler(id)` traz um documento sem assinar a coleção, e null quando ele não existe
+//   ou não há conta. É para documento grande que se abre um de cada vez (um quadro
+//   da Lousa pode chegar perto do limite de 1 MB do banco): `observar` a coleção
+//   inteira baixaria todos os quadros para mostrar um.
 // - O mapa de onde cada coleção mora é do sistema, por app e por nome. Coleção que
 //   o sistema não conhece não abre: não existe "qualquer nome vira uma pasta nova"
 //   sem regra de banco revisada para ela.

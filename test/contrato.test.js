@@ -10,7 +10,7 @@ import {
 import { criarSistemaFalso } from '../src/host/falso.js'
 
 describe('o contrato', () => {
-  test('as seis obrigatórias que o jogo-sdk já prova, e as quatro opcionais das Notas', () => {
+  test('as seis obrigatórias que o jogo-sdk já prova, e as opcionais das ondas 4a e 4c', () => {
     assert.deepEqual(OBRIGATORIAS, [
       'identidade',
       'avisar',
@@ -19,8 +19,8 @@ describe('o contrato', () => {
       'metricas',
       'armazenamento',
     ])
-    // 0.2.0: opcional nova é versão menor, e o contrato continua o 1.
-    assert.deepEqual(OPCIONAIS, ['colecoes', 'ia', 'arquivos', 'abertura'])
+    // 0.2.0 (as Notas) e 0.3.0 (janela): opcional nova é versão menor, e o contrato continua o 1.
+    assert.deepEqual(OPCIONAIS, ['colecoes', 'ia', 'arquivos', 'abertura', 'janela'])
     assert.equal(VERSAO_DO_CONTRATO, 1)
   })
 

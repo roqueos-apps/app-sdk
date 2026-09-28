@@ -92,6 +92,14 @@ export function criarColecoesEmMemoria({
           aoMudar(lista(nome))
           return () => ouvintes.get(nome)?.delete(o)
         },
+        // Um documento só, sem assinar: o que a Lousa usa para abrir um quadro grande.
+        async ler(id) {
+          conferirIdDeDocumento(id)
+          const uid = uidAtual()
+          if (!uid) return null
+          const d = banco(uid, nome).get(id)
+          return d ? entregar(d) : null
+        },
         async criar(id, campos) {
           const uid = precisaDeConta()
           conferirIdDeDocumento(id)

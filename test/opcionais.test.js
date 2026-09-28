@@ -256,11 +256,22 @@ describe('arquivos', () => {
       comCodigo('sem-conta'),
     )
     const f = criarSistemaFalso({ identidade: ANA })
+    const salvo = await f.sistema.arquivos.salvar({
+      nome: 'a.md',
+      conteudo: 'x',
+      tipo: 'text/markdown',
+    })
     assert.deepEqual(
-      await f.sistema.arquivos.salvar({ nome: 'a.md', conteudo: 'x', tipo: 'text/markdown' }),
-      { nome: 'a.md', pasta: 'Documentos' },
+      { ...salvo, ref: typeof salvo.ref },
+      {
+        nome: 'a.md',
+        pasta: 'Documentos',
+        ref: 'string',
+      },
     )
     assert.equal(f.registro.arquivos.length, 1)
+    // A ref de salvar lê o que foi salvo (0.3.0).
+    assert.equal(await (await f.sistema.arquivos.ler(salvo.ref)).text(), 'x')
   })
 })
 
@@ -390,10 +401,9 @@ describe('sistema de desenvolvimento: as opcionais', () => {
       janela: janelaFalsa(),
       registro: { info: (l) => linhas.push(l), debug() {} },
     })
-    assert.deepEqual(await sistema.arquivos.salvar({ nome: 'a.md', conteudo: 'x' }), {
-      nome: 'a.md',
-      pasta: 'Documentos',
-    })
+    const salvo = await sistema.arquivos.salvar({ nome: 'a.md', conteudo: 'x' })
+    assert.deepEqual([salvo.nome, salvo.pasta], ['a.md', 'Documentos'])
+    assert.match(salvo.ref, /^arq\./)
     await assert.rejects(
       sistema.arquivos.salvar({ nome: 'a.md', conteudo: 'x', pasta: 'Raiz' }),
       comCodigo('pasta-invalida'),

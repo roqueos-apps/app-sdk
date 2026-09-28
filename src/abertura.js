@@ -11,6 +11,11 @@
 // O conteúdo é um objeto simples, e o que cada chave quer dizer é do app: ele
 // documenta no README o que aceita. O sistema entrega cópia, então o app não
 // consegue mudar o pedido que outro ouvinte vai ler.
+//
+// Uma chave é do sistema (0.3.0): quando a pessoa usa o "abrir com" do Finder, o
+// pedido chega como `{ arquivo: { ref, nome, tipo } }`, e o app lê o conteúdo com
+// `sistema.arquivos.ler(ref)`. Só chega ao app que declara aquele tipo em `abre`
+// no app.json, e a ref vale como qualquer outra: nesta sessão, só para este app.
 
 import { conferirCampos } from './colecoes.js'
 

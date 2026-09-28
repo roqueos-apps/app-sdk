@@ -16,6 +16,10 @@ export const CODIGOS_DE_ERRO = Object.freeze({
   'id-invalido': 'o id do documento está fora do formato',
   'valor-invalido': 'o valor não é um dado simples (texto, número, sim/não, lista, objeto)',
   'pasta-invalida': 'a pasta não está entre as que o sistema deixa o app gravar',
+  'pasta-nao-declarada': 'o app lê ou mostra uma pasta que não declarou em "pastas" no app.json',
+  'ref-invalida':
+    'a referência de arquivo não veio deste sistema nesta sessão (fabricada, de outro app, ou guardada de ontem)',
+  'nao-encontrado': 'o arquivo ou o documento não existe mais',
   indisponivel: 'o sistema não oferece isso aqui (fora do RoqueOS, por exemplo)',
 })
 

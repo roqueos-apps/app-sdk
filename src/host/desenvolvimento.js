@@ -12,12 +12,12 @@
 
 import { VERSAO_DO_CONTRATO } from '../contrato.js'
 import { IDIOMAS, normalizarIdioma } from '../idiomas.js'
-import { ErroDoSistema } from '../erros.js'
-import { conferirArquivo } from '../arquivos.js'
 import { conferirPedidoDeIa } from '../ia.js'
 import { criarAbertura } from '../abertura.js'
+import { criarTelaCheia } from '../janela.js'
 import { armazenamentoDoApp, armazenamentoEmMemoria, storageDoNavegador } from './armazenamento.js'
 import { criarColecoesEmMemoria } from './colecoes-em-memoria.js'
+import { criarArquivosEmMemoria } from './arquivos-em-memoria.js'
 
 /** Idiomas que correm da direita para a esquerda. */
 const RTL = new Set(['ar-AR'])
@@ -32,7 +32,8 @@ export const CONTA_DE_DESENVOLVIMENTO = Object.freeze({ uid: 'local', nome: 'Voc
 /**
  * @param {{
  *   appId: string, janela?: any, registro?: Pick<Console, 'info'|'debug'>, idioma?: string,
- *   colecoes?: string[],
+ *   colecoes?: string[], pastas?: string[],
+ *   aoTelaCheia?: (ligar: boolean) => boolean | Promise<boolean>,
  * }} opcoes
  * @returns {{ sistema: object, mudarIdioma: (novo: string) => void }}
  */
@@ -42,6 +43,8 @@ export function criarSistemaDeDesenvolvimento({
   registro = console,
   idioma,
   colecoes = [],
+  pastas = [],
+  aoTelaCheia = (ligar) => ligar,
 } = {}) {
   if (typeof appId !== 'string' || !/^[a-z][a-z0-9]*$/.test(appId)) {
     throw new TypeError(
@@ -82,6 +85,28 @@ export function criarSistemaDeDesenvolvimento({
       gravar: (k, v) => storage.setItem(`roqueos:${appId}:${k}`, v),
     },
   })
+  // Os Arquivos ficam em memória: o que a sessão salvou aparece no listar, e salvar
+  // também baixa o arquivo, que é o mais perto do Finder que o navegador puro chega.
+  const guardados = criarArquivosEmMemoria({
+    pastas,
+    uidAtual: () => quem.uid,
+    aoSalvar(a) {
+      const URLs = janela.URL
+      if (typeof URLs?.createObjectURL === 'function' && janela.document) {
+        const blob =
+          typeof a.conteudo === 'string' ? new Blob([a.conteudo], { type: a.tipo }) : a.conteudo
+        const url = URLs.createObjectURL(blob)
+        const link = janela.document.createElement('a')
+        link.href = url
+        link.download = a.nome
+        link.click?.()
+        URLs.revokeObjectURL?.(url)
+      }
+      registro.info(`[${appId}] salvaria em ${a.pasta}/${a.nome}`)
+    },
+    aoAbrirPasta: (pasta) => registro.info(`[${appId}] abriria o Finder em ${pasta}`),
+  })
+  const tela = criarTelaCheia({ aplicar: async (ligar) => Boolean(await aoTelaCheia(ligar)) })
   let painel = null
   let idiomaAtual = normalizarIdioma(idioma ?? daUrl ?? nav.language)
   const ouvintesDeIdioma = new Set()
@@ -165,32 +190,22 @@ export function criarSistemaDeDesenvolvimento({
         return Object.freeze({ fechar: () => este.fechar() })
       },
     },
-    // Salvar em Arquivos vira download: é o mais perto que o navegador puro chega.
-    arquivos: {
-      async salvar(pedido) {
-        const a = conferirArquivo(pedido)
-        if (!quem.uid) throw new ErroDoSistema('sem-conta')
-        const URLs = janela.URL
-        if (typeof URLs?.createObjectURL === 'function' && janela.document) {
-          const blob =
-            typeof a.conteudo === 'string' ? new Blob([a.conteudo], { type: a.tipo }) : a.conteudo
-          const url = URLs.createObjectURL(blob)
-          const link = janela.document.createElement('a')
-          link.href = url
-          link.download = a.nome
-          link.click?.()
-          URLs.revokeObjectURL?.(url)
-        }
-        registro.info(`[${appId}] salvaria em ${a.pasta}/${a.nome}`)
-        return { nome: a.nome, pasta: a.pasta }
-      },
-    },
+    arquivos: guardados.arquivos,
     abertura: aberta.abertura,
+    janela: tela.janela,
   }
 
   return {
     sistema,
     mudarAbertura: (novo) => aberta.mudar(novo),
+    /** O "abrir com" do yarn dev: um arquivo escolhido na barra da janela falsa. */
+    abrirCom(arquivo) {
+      const entregue = guardados.entregar(arquivo)
+      aberta.mudar({ arquivo: entregue })
+      return entregue.ref
+    },
+    /** A pessoa saiu da tela cheia por conta própria. */
+    sairDaTelaCheia: () => tela.mudar(false),
     mudarIdioma(novo) {
       idiomaAtual = normalizarIdioma(novo)
       avisarIdioma()
@@ -208,6 +223,8 @@ const ESTILO_DA_JANELA = `
 .ros-dev-barra b{flex:1;font-weight:600;text-align:center}
 .ros-dev-barra select{background:#1d2129;color:#e9eaed;border:1px solid #3a4150;border-radius:6px;font-size:12px}
 .ros-dev-palco{position:relative;flex:1;min-height:0}
+.ros-dev-janela--cheia{position:fixed;inset:0;width:auto!important;height:auto!important;border-radius:0;z-index:100}
+.ros-dev-janela--cheia .ros-dev-barra{display:none}
 .ros-dev-ia{position:absolute;inset:auto 12px 12px 12px;z-index:10;padding:12px 14px;border-radius:10px;
   background:#262b35;color:#e9eaed;font:13px/1.4 system-ui,sans-serif;box-shadow:0 12px 30px rgba(0,0,0,.45)}
 .ros-dev-ia p{margin:0 0 8px}
@@ -221,11 +238,18 @@ const ESTILO_DA_JANELA = `
  */
 export function montarNaJanelaFalsa(app, { manifesto, alvo, janela = globalThis, registro } = {}) {
   const doc = janela.document
-  const { sistema, mudarIdioma } = criarSistemaDeDesenvolvimento({
+  // A moldura existe antes do sistema: é ela que a tela cheia do yarn dev estica.
+  const moldura = doc.createElement('div')
+  const { sistema, mudarIdioma, abrirCom, sairDaTelaCheia } = criarSistemaDeDesenvolvimento({
     appId: app.id,
     janela,
     registro,
     colecoes: manifesto?.colecoes ?? [],
+    pastas: manifesto?.pastas ?? [],
+    aoTelaCheia(ligar) {
+      moldura.classList.toggle('ros-dev-janela--cheia', ligar)
+      return ligar
+    },
   })
   const estilo = doc.createElement('style')
   estilo.textContent = ESTILO_DA_JANELA
@@ -233,7 +257,6 @@ export function montarNaJanelaFalsa(app, { manifesto, alvo, janela = globalThis,
 
   const mesa = alvo ?? doc.body
   mesa.classList.add('ros-dev-mesa')
-  const moldura = doc.createElement('div')
   moldura.className = 'ros-dev-janela'
   const j = manifesto?.janela ?? {}
   moldura.style.width = `${j.largura ?? 480}px`
@@ -253,6 +276,25 @@ export function montarNaJanelaFalsa(app, { manifesto, alvo, janela = globalThis,
     seletor.appendChild(opcao)
   }
   barra.append(titulo, seletor)
+  // O app que abre arquivo ganha um "Abrir arquivo" na barra: é o "abrir com" do Finder.
+  if (Array.isArray(manifesto?.abre) && manifesto.abre.length) {
+    const escolher = doc.createElement('input')
+    escolher.type = 'file'
+    escolher.accept = manifesto.abre.join(',')
+    escolher.setAttribute('aria-label', 'Abrir arquivo com o app')
+    escolher.addEventListener('change', () => {
+      const f = escolher.files?.[0]
+      if (f) abrirCom({ nome: f.name, tipo: f.type || 'application/octet-stream', conteudo: f })
+    })
+    barra.insertBefore(escolher, seletor)
+  }
+  // Esc sai da tela cheia, como no RoqueOS.
+  janela.addEventListener?.('keydown', (e) => {
+    if (e.key === 'Escape' && sistema.janela.emTelaCheia()) {
+      moldura.classList.remove('ros-dev-janela--cheia')
+      sairDaTelaCheia()
+    }
+  })
 
   const palco = doc.createElement('div')
   palco.className = 'ros-dev-palco'

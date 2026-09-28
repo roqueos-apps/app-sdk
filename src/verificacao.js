@@ -395,6 +395,37 @@ export function conferirCapacidadesDeclaradas(raiz) {
   return problemas
 }
 
+/**
+ * A pasta que o app lista ou mostra no Finder com o nome escrito no código
+ * (`arquivos.listar('Imagens')`, `abrirPasta('Videos')`) precisa estar em `pastas`
+ * no app.json. Sem isto, o `yarn dev` do app declara uma lista e o código usa
+ * outra, e a recusa (`pasta-nao-declarada`) só aparece no RoqueOS. Pasta montada em
+ * tempo de execução o check não vê; o sistema recusa do mesmo jeito.
+ */
+export function conferirPastasDeclaradas(raiz) {
+  let declaradas
+  try {
+    declaradas = lerJson(join(raiz, 'app.json')).pastas ?? []
+  } catch {
+    return []
+  }
+  if (!Array.isArray(declaradas)) return []
+  const problemas = []
+  const uso = /\b(listar|abrirPasta)\s*\(\s*(['"`])([A-Za-z]+)\2/g
+  for (const arquivo of arquivosDe(join(raiz, 'src'))) {
+    if (!CODIGO.test(arquivo)) continue
+    const codigo = semComentarios(readFileSync(arquivo, 'utf8'))
+    for (const a of codigo.matchAll(uso)) {
+      if (declaradas.includes(a[3])) continue
+      const linha = codigo.slice(0, a.index).split('\n').length
+      problemas.push(
+        `${barra(raiz, arquivo)}:${linha} ${a[1]}('${a[3]}') sem "${a[3]}" em pastas no app.json`,
+      )
+    }
+  }
+  return problemas
+}
+
 export function conferirManifesto(raiz) {
   const arquivo = join(raiz, 'app.json')
   if (!existsSync(arquivo)) return ['app.json ausente']
@@ -432,6 +463,7 @@ export function verificarRepo(raiz, { sdk = false, semPackage = false } = {}) {
         secao: 'capacidades opcionais declaradas',
         problemas: conferirCapacidadesDeclaradas(raiz),
       },
+      { secao: 'pastas declaradas', problemas: conferirPastasDeclaradas(raiz) },
     )
   }
   return secoes

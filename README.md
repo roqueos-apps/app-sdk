@@ -62,11 +62,12 @@ parte do contrato: capacidade sem motivo vira atalho para o app alcançar o que 
 | `armazenamento` | `ler`, `gravar`, `apagar`                  | texto no espaço `roqueos:<app>:<chave>`, no aparelho                                |
 
 As seis vêm do `jogo-sdk`, que as prova em vinte jogos. Capacidade nova nasce **opcional**, na
-onda do primeiro app que precisa dela, com motivo escrito. Mudar a forma de uma que existe é
-versão nova do contrato, e o sistema recusa o app que pede outra versão em vez de quebrar em
-runtime.
+onda do primeiro app que precisa dela, com motivo escrito. Acrescentar função a uma opcional é
+versão menor, porque o app de antes continua servido; tirar função, ou mudar a forma ou o
+sentido de uma que existe, é versão nova do contrato, e o sistema recusa o app que pede outra
+versão em vez de quebrar em runtime.
 
-#### As opcionais (0.2.0, nascidas com as Notas)
+#### As opcionais (0.2.0 com as Notas, 0.3.0 com a Câmera, a Captura e os visualizadores)
 
 O app lista em `capacidades` no `app.json` as que usa; o `mount` recusa o sistema que não as
 tem, e o `app check` reprova o app que usa uma sem listar. Quando uma falha, ela rejeita com
@@ -74,12 +75,13 @@ tem, e o `app check` reprova o app que usa uma sem listar. Quando uma falha, ela
 `campo-do-sistema`, `pasta-invalida`...; a lista está em [`src/erros.js`](src/erros.js)): nunca
 finge que deu certo.
 
-| Capacidade | Forma                                                        | Para quê                                                                                                 |
-| ---------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| `colecoes` | `abrir(nome)` → `observar`, `criar`, `atualizar`, `apagar`   | documentos na conta da pessoa, em tempo real e em todo aparelho ([`src/colecoes.js`](src/colecoes.js))   |
-| `ia`       | `abrirPainel({ ancora, tipo, contexto, aplicar, aoFechar })` | o painel de IA do sistema sobre o conteúdo do app; a chave nunca chega ao app ([`src/ia.js`](src/ia.js)) |
-| `arquivos` | `salvar({ nome, conteudo, tipo, pasta })`                    | guardar um arquivo nos Arquivos da pessoa, numa pasta da lista ([`src/arquivos.js`](src/arquivos.js))    |
-| `abertura` | `atual()`, `aoMudar(fn)`                                     | o que quem abriu a janela mandou, e o pedido novo com ela aberta ([`src/abertura.js`](src/abertura.js))  |
+| Capacidade | Forma                                                                 | Para quê                                                                                                                             |
+| ---------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `colecoes` | `abrir(nome)` → `observar`, `ler`, `criar`, `atualizar`, `apagar`     | documentos na conta da pessoa, em tempo real e em todo aparelho; `ler(id)` traz um só (0.3.0) ([`src/colecoes.js`](src/colecoes.js)) |
+| `ia`       | `abrirPainel({ ancora, tipo, contexto, aplicar, aoFechar })`          | o painel de IA do sistema sobre o conteúdo do app; a chave nunca chega ao app ([`src/ia.js`](src/ia.js))                             |
+| `arquivos` | `salvar`, `listar(pasta, { tipos })`, `ler(ref)`, `abrirPasta(pasta)` | os Arquivos da pessoa, por pasta e por ref opaca; listar e abrir só a pasta declarada (0.3.0) ([`src/arquivos.js`](src/arquivos.js)) |
+| `abertura` | `atual()`, `aoMudar(fn)`                                              | o que quem abriu a janela mandou; o "abrir com" do Finder chega como `{ arquivo }` (0.3.0) ([`src/abertura.js`](src/abertura.js))    |
+| `janela`   | `telaCheia(bool)`, `emTelaCheia()`, `aoMudarTelaCheia(fn)`            | a tela cheia feita pelo sistema, que é quem pode escrever no `<html>` (0.3.0) ([`src/janela.js`](src/janela.js))                     |
 
 Em `colecoes`, as datas são do sistema: cada documento chega com `criadoEm` e `atualizadoEm` em
 milissegundos, e o app que tenta gravar uma delas recebe `campo-do-sistema`. `atualizar` troca
@@ -88,6 +90,15 @@ só os campos enviados, para dois donos escreverem no mesmo documento sem um apa
 sair troca o que o app vê sem ele refazer nada, e sem conta gravar rejeita com `sem-conta`. O
 app diz no `app.json` os nomes das coleções que abre (`"colecoes": ["notas"]`); o RoqueOS
 confere no build que cada uma está no mapa dele, e coleção fora do mapa não abre.
+
+Em `arquivos`, a pasta é um identificador (`Documentos`, `Imagens`, `Videos`), e não um
+caminho: onde ela mora e o nome que a pessoa vê são do sistema. Salvar é livre em qualquer pasta
+da lista; **listar e abrir no Finder, só a pasta que o app declara em `pastas`** no `app.json`
+(a Câmera vê as Imagens, e não a conta inteira). O app nunca vê caminho: `salvar` e `listar`
+devolvem uma `ref` opaca, e `ler(ref)` devolve o Blob. A ref vale só para este app nesta sessão
+e não se guarda no `armazenamento`; a de ontem rejeita com `ref-invalida`. O "abrir com" do
+Finder entrega uma ref pela `abertura` ao app que declara o tipo em `abre`, e esse arquivo o
+app lê mesmo sem ter declarado a pasta dele: quem concedeu foi a pessoa, ao escolher o app.
 
 ### O manifesto `app.json`
 
@@ -114,12 +125,18 @@ confere no build que cada uma está no mapa dele, e coleção fora do mapa não 
 }
 ```
 
+Um visualizador de imagem, na 0.3.0, declararia `"capacidades": ["abertura", "arquivos",
+"janela"]` e `"abre": ["image/*"]`; a Câmera, `"capacidades": ["arquivos"]` e
+`"pastas": ["Imagens"]`.
+
 O `id` é **permanente**: é a chave da janela, do dock e do armazenamento de quem já usa o app.
 `camada` é `primeira-parte` (nosso, na mesma origem, com os dez idiomas) ou `comunidade`
 (qualquer pessoa, num iframe em outra origem, com pt-BR e en-US obrigatórios). `icone` é o
 nome de um Material Icon ou um SVG do repo. `capacidades` lista as opcionais que o app usa, e
 `colecoes`, os nomes das coleções que ele abre (obrigatório quando `capacidades` tem
-`colecoes`). Campo que o manifesto não conhece reprova, para um erro de digitação não ser
+`colecoes`). `pastas` são as pastas que ele lista e mostra no Finder (com `arquivos`), e
+`abre`, os tipos que ele abre pelo "abrir com" (`image/*`, `application/pdf`; com `abertura` e
+`arquivos`). Campo que o manifesto não conhece reprova, para um erro de digitação não ser
 ignorado em silêncio.
 
 ### As variáveis CSS do sistema
@@ -156,6 +173,13 @@ O `app check` confere, e reprova sem "aviso":
   `sistema['arquivos']` ou `{ abertura } = sistema` no `src/` sem o nome em `capacidades` no
   `app.json` reprova. Sem isso o app monta no `yarn dev`, que tem todas, e quebra com
   `undefined` no sistema que não tem aquela, em vez da recusa com motivo do `mount`.
+- **Pasta usada é pasta declarada**: `arquivos.listar('Imagens')` ou `abrirPasta('Videos')` no
+  `src/` sem a pasta em `pastas` reprova, em vez da recusa `pasta-nao-declarada` só no RoqueOS.
+
+E o repositório do SDK tem uma regra só dele: **a tag de release só em commit que já está na
+`main`**. O workflow `tag` roda `bin/tag-na-main.mjs` em todo push de tag `v*` e fica vermelho
+quando a tag está fora dela, porque a família pina o SDK por tag, e uma tag num commit de branch
+(que um merge por squash nunca leva à `main`) deixa todo mundo pinado num commit órfão.
 
 ## Pré-requisitos
 
@@ -174,7 +198,7 @@ node bin/app.mjs check caminho/do/app   # o app check num repo de app
 Num repo de app, o SDK entra como dependência git pinada por tag, sem registro de pacote:
 
 ```json
-{ "dependencies": { "@roqueos-apps/app-sdk": "github:roqueos-apps/app-sdk#v0.2.0" } }
+{ "dependencies": { "@roqueos-apps/app-sdk": "github:roqueos-apps/app-sdk#v0.3.0" } }
 ```
 
 e o `yarn dev` monta o app na janela falsa:
@@ -193,12 +217,17 @@ em outro idioma, e `?leve=1` mostra o app como o aparelho fraco vê. Na janela f
 está entrada numa conta local, e a coleção fica no `localStorage` do app, para continuar depois
 do F5; `?convidado=1` mostra o app como o convidado vê, e `?abertura={"nota":"n1"}` abre como
 se outro pedaço do sistema tivesse pedido. O painel de IA, que é do RoqueOS, aparece como um
-aviso no lugar onde ele abriria, e salvar em Arquivos vira download.
+aviso no lugar onde ele abriria, e salvar em Arquivos vira download (e o que a sessão salvou
+aparece no `listar`). O app que declara `abre` ganha um "Abrir arquivo" na barra da janela, que
+faz o papel do "abrir com" do Finder, e a tela cheia estica a janela falsa (Esc sai).
 
-No teste, `criarSistemaFalso()` devolve o `sistema` e o que o app fez (`registro.avisos`,
-`registro.eventos`, `registro.arquivos`, `registro.paineis`), e mexe no mundo em volta como o
-RoqueOS mexe: `mudarIdioma`, `mudarIdentidade`, `mudarAbertura`, `colecoes.semear` e
-`colecoes.guardado`, e `ia.aplicar`/`ia.fechar` para a pessoa usar o painel de IA.
+No teste, `criarSistemaFalso({ pastas })` devolve o `sistema` e o que o app fez
+(`registro.avisos`, `registro.eventos`, `registro.arquivos`, `registro.paineis`,
+`registro.pastasAbertas`, `registro.telaCheia`), e mexe no mundo em volta como o RoqueOS mexe:
+`mudarIdioma`, `mudarIdentidade`, `mudarAbertura`, `colecoes.semear` e `colecoes.guardado`,
+`ia.aplicar`/`ia.fechar` para a pessoa usar o painel de IA, `arquivos.semear` e
+`arquivos.guardados` para os Arquivos, `abrirCom` para o "abrir com" do Finder, e
+`telaCheia.sair`/`telaCheia.recusar` para a pessoa e o navegador mexerem na tela cheia.
 
 ## Estrutura
 
@@ -214,14 +243,17 @@ src/
   erros.js          ErroDoSistema e os códigos que uma capacidade devolve
   colecoes.js       a semântica de colecoes: carimbos, campos simples, id de documento
   ia.js             o pedido de abrirPainel
-  arquivos.js       o pedido de salvar e as pastas que o app pode usar
+  arquivos.js       as pastas, o pedido de salvar, o filtro de tipos e o cofre de refs
   abertura.js       criarAbertura, a abertura que os três sistemas usam
+  janela.js         criarTelaCheia, a tela cheia que os três sistemas usam
   host/
     armazenamento.js  o espaço roqueos:<app>:<chave>
     colecoes-em-memoria.js  colecoes em memória, para o falso e o de desenvolvimento
+    arquivos-em-memoria.js  arquivos em memória, com o cofre de refs, para os mesmos dois
     desenvolvimento.js  o sistema com o navegador puro, e a janela falsa
     falso.js          o sistema em memória, para teste
 bin/app.mjs         o app check
+bin/tag-na-main.mjs a tag de release só em commit da main (o workflow tag roda)
 test/               node:test, com um app de exemplo em fixtures/app-ok
 ```
 
@@ -267,20 +299,27 @@ on instead of RoqueOS. It is the sibling of `jogo-sdk`, which did the same for g
   `atualizar` replaces only the fields sent), `ia` (the system's single AI panel opened inside
   an app element; agent keys never reach the app), `arquivos` (save a file into the user's
   Files, in an allow-listed folder, never overwriting) and `abertura` (what the opener sent,
-  and new requests while the window is open). A failing capability rejects with an
-  `ErroDoSistema` carrying a `codigo`; it never pretends to succeed.
+  and new requests while the window is open). Version 0.3.0, for the Camera, Screen Capture
+  and the viewers, lets `arquivos` list, read and show a folder (`Documentos`, `Imagens`,
+  `Videos`) through opaque per-session refs, and only the folders the app declares in `pastas`;
+  delivers the Finder's "open with" as `{ arquivo }` in `abertura` to apps declaring the type in
+  `abre`; adds `colecoes.ler(id)` for one document; and adds `janela`, full screen done by the
+  system. A failing capability rejects with an `ErroDoSistema` carrying a `codigo`; it never
+  pretends to succeed.
 - `app.json` declares the permanent `id`, name and description in the ten languages (first
   party) or in pt-BR and en-US (community), icon, colour, category, window size, layer,
   author and licence. Unknown fields fail.
 - `app check` fails on install scripts, an invalid manifest, missing or empty translations,
   assets without licence and origin in `ASSETS.md`, Firebase imports, imports of RoqueOS
   internals (`src/`, `stores/`, Quasar) in JavaScript, `.vue` or SCSS, `--ros-*` CSS
-  variables outside the contract list, and optional capabilities used in `src/` but not listed
-  in `capacidades`.
+  variables outside the contract list, optional capabilities used in `src/` but not listed
+  in `capacidades`, and folders listed or shown in `src/` but not declared in `pastas`. The SDK
+  repository itself only tags releases on commits already in `main` (the `tag` workflow runs
+  `bin/tag-na-main.mjs`).
 
 Run `yarn install --ignore-scripts` and `yarn verificar`; CI runs the same command. An app
 repository depends on the SDK as a git dependency pinned by tag
-(`"@roqueos-apps/app-sdk": "github:roqueos-apps/app-sdk#v0.2.0"`), with no package registry. In
+(`"@roqueos-apps/app-sdk": "github:roqueos-apps/app-sdk#v0.3.0"`), with no package registry. In
 an app repository, `montarNaJanelaFalsa(app, { manifesto })` from
 `@roqueos-apps/app-sdk/sistema-de-desenvolvimento` mounts the app in a fake RoqueOS window with
 a language picker, including right-to-left Arabic.
