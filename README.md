@@ -6,6 +6,8 @@ guardar o que é do app, como avisar alguma coisa na tela) e é só por elas que
 RoqueOS. O mesmo app roda dentro do RoqueOS, sozinho no navegador e no teste, sem saber em
 qual dos três está.
 
+![Os três sistemas implementam as mesmas capacidades, e o app só fala com elas](docs/contrato.svg)
+
 _English below._
 
 ## Por que existe
