@@ -31,7 +31,7 @@ export {
   ordenarArquivos,
   tipoCasa,
 } from './arquivos.js'
-export { TIPOS_DE_IA, conferirPedidoDeIa } from './ia.js'
+export { MAXIMO_DE_ACOES_DE_IA, TIPOS_DE_IA, conferirPedidoDeIa } from './ia.js'
 export { criarAbertura } from './abertura.js'
 // As peças da 0.3.0: a tela cheia pedida ao sistema, e os anexos do app.
 export { criarTelaCheia } from './janela.js'

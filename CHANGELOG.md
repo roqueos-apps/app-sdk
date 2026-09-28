@@ -32,6 +32,10 @@ entrar na `main` (sem squash) e esta versão for rebaseada sobre ela.
   um id que dura entre sessões e aparelhos e que é do app e da conta. Nunca há URL durável no
   contrato. Sem conta rejeita; acima de 10 MB (`TAMANHO_MAXIMO_DE_ANEXO`), `grande-demais`.
   `gerarIdDeAnexo`, `conferirIdDeAnexo` e `conferirConteudoDeAnexo` para os três sistemas.
+- `ia.abrirPainel` aceita `acoes`: até seis ações do app somadas às do catálogo do tipo,
+  `{ id, rotulo, prompt, icone }`, com o rótulo já no idioma de quem usa. A Lousa agrupa um
+  brainstorm em temas e tira dele as ações a fazer; sem isto, perderia as duas ao sair do
+  RoqueOS. `MAXIMO_DE_ACOES_DE_IA`.
 - `janela`, opcional nova: `telaCheia(true | false)` resolve com o estado real,
   `emTelaCheia()` e `aoMudarTelaCheia(fn)`. É o sistema quem faz a tela cheia, porque no RoqueOS
   ela escreve no `<html>`, o que um app não pode.

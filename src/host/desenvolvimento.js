@@ -177,7 +177,14 @@ export function criarSistemaDeDesenvolvimento({
           'A IA roda dentro do RoqueOS, com os agentes de quem usa. Aqui no yarn dev o painel é só este aviso.'
         const botao = doc.createElement('button')
         botao.textContent = 'Fechar'
-        caixa.append(texto, botao)
+        caixa.append(texto)
+        // As ações do app aparecem pelo rótulo, para quem desenvolve conferir o texto.
+        if (p.acoes?.length) {
+          const lista = doc.createElement('p')
+          lista.textContent = `Ações do app: ${p.acoes.map((a) => a.rotulo).join(' · ')}`
+          caixa.append(lista)
+        }
+        caixa.append(botao)
         p.ancora.appendChild(caixa)
         let aberto = true
         const este = {

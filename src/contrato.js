@@ -90,7 +90,7 @@ export const CAPACIDADES = Object.freeze({
     obrigatoria: false,
     forma: { abrirPainel: FN },
     porque:
-      'abrirPainel({ ancora, tipo, contexto, aplicar, acento, aoFechar }) abre o painel de IA do sistema dentro de um elemento do app, sobre o conteúdo que o app entrega, e devolve { fechar }. O RoqueOS tem um painel de IA só para todos os apps, e a chave dos agentes nunca chega ao app. Detalhes em src/ia.js.',
+      'abrirPainel({ ancora, tipo, contexto, aplicar, acento, aoFechar, acoes }) abre o painel de IA do sistema dentro de um elemento do app, sobre o conteúdo que o app entrega, e devolve { fechar }. acoes (0.3.0) soma ações do app às do catálogo, com o rótulo no idioma de quem usa. O RoqueOS tem um painel de IA só para todos os apps, e a chave dos agentes nunca chega ao app. Detalhes em src/ia.js.',
   },
   arquivos: {
     obrigatoria: false,

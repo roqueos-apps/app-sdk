@@ -75,14 +75,14 @@ tem, e o `app check` reprova o app que usa uma sem listar. Quando uma falha, ela
 `campo-do-sistema`, `pasta-invalida`...; a lista está em [`src/erros.js`](src/erros.js)): nunca
 finge que deu certo.
 
-| Capacidade | Forma                                                                 | Para quê                                                                                                                             |
-| ---------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `colecoes` | `abrir(nome)` → `observar`, `ler`, `criar`, `atualizar`, `apagar`     | documentos na conta da pessoa, em tempo real e em todo aparelho; `ler(id)` traz um só (0.3.0) ([`src/colecoes.js`](src/colecoes.js)) |
-| `ia`       | `abrirPainel({ ancora, tipo, contexto, aplicar, aoFechar })`          | o painel de IA do sistema sobre o conteúdo do app; a chave nunca chega ao app ([`src/ia.js`](src/ia.js))                             |
-| `arquivos` | `salvar`, `listar(pasta, { tipos })`, `ler(ref)`, `abrirPasta(pasta)` | os Arquivos da pessoa, por pasta e por ref opaca; listar e abrir só a pasta declarada (0.3.0) ([`src/arquivos.js`](src/arquivos.js)) |
-| `abertura` | `atual()`, `aoMudar(fn)`                                              | o que quem abriu a janela mandou; o "abrir com" do Finder chega como `{ arquivo }` (0.3.0) ([`src/abertura.js`](src/abertura.js))    |
-| `anexos`   | `guardar(blob)` → `{ id }`, `ler(id)`, `apagar(id)`                   | bytes do app na conta, por um id que dura e nunca vira URL: a imagem do quadro da Lousa (0.3.0) ([`src/anexos.js`](src/anexos.js))   |
-| `janela`   | `telaCheia(bool)`, `emTelaCheia()`, `aoMudarTelaCheia(fn)`            | a tela cheia feita pelo sistema, que é quem pode escrever no `<html>` (0.3.0) ([`src/janela.js`](src/janela.js))                     |
+| Capacidade | Forma                                                                 | Para quê                                                                                                                                      |
+| ---------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `colecoes` | `abrir(nome)` → `observar`, `ler`, `criar`, `atualizar`, `apagar`     | documentos na conta da pessoa, em tempo real e em todo aparelho; `ler(id)` traz um só (0.3.0) ([`src/colecoes.js`](src/colecoes.js))          |
+| `ia`       | `abrirPainel({ ancora, tipo, contexto, aplicar, aoFechar, acoes })`   | o painel de IA do sistema sobre o conteúdo do app, com as ações do app somadas (0.3.0); a chave nunca chega ao app ([`src/ia.js`](src/ia.js)) |
+| `arquivos` | `salvar`, `listar(pasta, { tipos })`, `ler(ref)`, `abrirPasta(pasta)` | os Arquivos da pessoa, por pasta e por ref opaca; listar e abrir só a pasta declarada (0.3.0) ([`src/arquivos.js`](src/arquivos.js))          |
+| `abertura` | `atual()`, `aoMudar(fn)`                                              | o que quem abriu a janela mandou; o "abrir com" do Finder chega como `{ arquivo }` (0.3.0) ([`src/abertura.js`](src/abertura.js))             |
+| `anexos`   | `guardar(blob)` → `{ id }`, `ler(id)`, `apagar(id)`                   | bytes do app na conta, por um id que dura e nunca vira URL: a imagem do quadro da Lousa (0.3.0) ([`src/anexos.js`](src/anexos.js))            |
+| `janela`   | `telaCheia(bool)`, `emTelaCheia()`, `aoMudarTelaCheia(fn)`            | a tela cheia feita pelo sistema, que é quem pode escrever no `<html>` (0.3.0) ([`src/janela.js`](src/janela.js))                              |
 
 Em `colecoes`, as datas são do sistema: cada documento chega com `criadoEm` e `atualizadoEm` em
 milissegundos, e o app que tenta gravar uma delas recebe `campo-do-sistema`. `atualizar` troca

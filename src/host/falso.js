@@ -142,6 +142,7 @@ export function criarSistemaFalso({
           acento: p.acento ?? null,
           titulo: p.titulo ?? null,
           aplica: typeof p.aplicar === 'function',
+          acoes: (p.acoes ?? []).map((a) => a.id),
           aberto: true,
         }
         registro.paineis.push(entrada)
