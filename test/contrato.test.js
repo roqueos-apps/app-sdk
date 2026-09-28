@@ -10,7 +10,7 @@ import {
 import { criarSistemaFalso } from '../src/host/falso.js'
 
 describe('o contrato', () => {
-  test('nasce com as seis capacidades que o jogo-sdk já prova, todas obrigatórias', () => {
+  test('as seis obrigatórias que o jogo-sdk já prova, e as quatro opcionais das Notas', () => {
     assert.deepEqual(OBRIGATORIAS, [
       'identidade',
       'avisar',
@@ -19,8 +19,24 @@ describe('o contrato', () => {
       'metricas',
       'armazenamento',
     ])
-    assert.deepEqual(OPCIONAIS, [])
+    // 0.2.0: opcional nova é versão menor, e o contrato continua o 1.
+    assert.deepEqual(OPCIONAIS, ['colecoes', 'ia', 'arquivos', 'abertura'])
     assert.equal(VERSAO_DO_CONTRATO, 1)
+  })
+
+  test('app que exige uma opcional não monta num sistema sem ela, e diz qual', () => {
+    const { sistema } = criarSistemaFalso()
+    const semIa = { ...sistema }
+    delete semIa.ia
+    assert.deepEqual(verificarSistema(semIa, { exigidas: ['ia'] }).problemas, [
+      'falta a capacidade "ia"',
+    ])
+    // Quem não exige não depende dela.
+    assert.equal(verificarSistema(semIa).ok, true)
+    // Presente com a forma errada reprova mesmo sem ser exigida.
+    assert.deepEqual(verificarSistema({ ...sistema, colecoes: {} }).problemas, [
+      'colecoes.abrir precisa ser função',
+    ])
   })
 
   test('toda capacidade diz por que existe', () => {

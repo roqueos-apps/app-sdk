@@ -10,6 +10,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { IDIOMAS, IDIOMA_CANONICO, IDIOMAS_OBRIGATORIOS_DA_COMUNIDADE } from './idiomas.js'
 import { validarManifesto } from './manifesto.js'
+import { OPCIONAIS } from './contrato.js'
 import { VARIAVEIS_DO_SISTEMA } from './variaveis.js'
 
 /**
@@ -355,6 +356,45 @@ export function conferirVariaveis(raiz) {
   return problemas
 }
 
+/**
+ * O app que usa uma capacidade opcional sem pôr ela em `capacidades` no app.json
+ * monta no `yarn dev` (o sistema de desenvolvimento tem todas) e quebra no sistema
+ * que não tem aquela, com `undefined` no meio do uso, em vez da recusa com motivo
+ * que o `mount` daria. Lê `sistema.x`, `sistema?.x`, `sistema['x']` e
+ * `{ x } = sistema`: é o nome que o contrato usa, e o que os apps da casa seguem.
+ */
+export function conferirCapacidadesDeclaradas(raiz) {
+  let declaradas
+  try {
+    declaradas = lerJson(join(raiz, 'app.json')).capacidades ?? []
+  } catch {
+    return [] // a seção do manifesto já reprova app.json ausente ou quebrado
+  }
+  if (!Array.isArray(declaradas)) return []
+  const problemas = []
+  for (const arquivo of arquivosDe(join(raiz, 'src'))) {
+    if (!CODIGO.test(arquivo)) continue
+    const codigo = semComentarios(readFileSync(arquivo, 'utf8'))
+    const onde = barra(raiz, arquivo)
+    for (const cap of OPCIONAIS) {
+      if (declaradas.includes(cap)) continue
+      const formas = [
+        new RegExp(`\\bsistema\\s*(?:\\?\\.|\\.)\\s*${cap}\\b`, 'g'),
+        new RegExp(`\\bsistema\\s*(?:\\?\\.)?\\[\\s*['"\`]${cap}['"\`]`, 'g'),
+        new RegExp(`\\{[^{}]*\\b${cap}\\b[^{}]*\\}\\s*=\\s*sistema\\b`, 'g'),
+      ]
+      const posicoes = new Set()
+      for (const forma of formas) for (const a of codigo.matchAll(forma)) posicoes.add(a.index)
+      for (const p of [...posicoes].sort((a, b) => a - b)) {
+        problemas.push(
+          `${onde}:${codigo.slice(0, p).split('\n').length} usa sistema.${cap} sem "${cap}" em capacidades no app.json`,
+        )
+      }
+    }
+  }
+  return problemas
+}
+
 export function conferirManifesto(raiz) {
   const arquivo = join(raiz, 'app.json')
   if (!existsSync(arquivo)) return ['app.json ausente']
@@ -388,6 +428,10 @@ export function verificarRepo(raiz, { sdk = false, semPackage = false } = {}) {
       { secao: 'o app não fala com banco', problemas: conferirBanco(raiz) },
       { secao: 'o app não importa o RoqueOS', problemas: conferirImportsDoRoqueOS(raiz) },
       { secao: 'variáveis do sistema no contrato', problemas: conferirVariaveis(raiz) },
+      {
+        secao: 'capacidades opcionais declaradas',
+        problemas: conferirCapacidadesDeclaradas(raiz),
+      },
     )
   }
   return secoes

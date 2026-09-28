@@ -15,11 +15,12 @@
 // revisão no merge e do pin exato de versão no RoqueOS. A fronteira de verdade
 // é a do modo comunidade (iframe em outra origem), que usa este mesmo contrato.
 //
-// Por que estas seis, e não mais: são capacidades que o `@roqueos-games/jogo-sdk`
-// já prova em vinte jogos, com a mesma forma e o mesmo motivo, e que um app de
-// qualquer tipo usa. Capacidade nova nasce opcional, na onda do primeiro app que
-// precisa dela, com motivo escrito; capacidade sem motivo vira atalho para o app
-// alcançar o que não devia.
+// Por que seis obrigatórias, e não mais: são capacidades que o
+// `@roqueos-games/jogo-sdk` já prova em vinte jogos, com a mesma forma e o mesmo
+// motivo, e que um app de qualquer tipo usa. Capacidade nova nasce opcional, na
+// onda do primeiro app que precisa dela, com motivo escrito; capacidade sem motivo
+// vira atalho para o app alcançar o que não devia. O app lista no `app.json` as
+// opcionais que usa, e o `mount` recusa o sistema que não as tem.
 //
 // Versionamento: capacidade nova e opcional é mudança menor; mudar a forma de
 // uma que existe é versão nova do contrato, e o sistema recusa o app que pede
@@ -45,7 +46,7 @@ export const CAPACIDADES = Object.freeze({
     obrigatoria: true,
     forma: FN,
     porque:
-      'avisar(mensagem, { tipo, fixo }) com tipo info, sucesso, aviso ou erro. É o que a pessoa PRECISA ler. fixo: true fica na tela até ela fechar, para o aviso que não pode sumir sozinho ("não consegui salvar, nada foi perdido"). Sistema que não sabe fazer aviso fixo mostra passageiro, pior mas sem quebrar.',
+      'avisar(mensagem, { tipo, fixo, titulo }) com tipo info, sucesso, aviso ou erro. É o que a pessoa PRECISA ler. fixo: true fica na tela até ela fechar, para o aviso que não pode sumir sozinho ("não consegui salvar, nada foi perdido"). titulo (desde 0.2.0, opcional) é a linha forte da notificação; o nome do app o sistema põe sozinho. Sistema que não sabe fazer aviso fixo mostra passageiro, e o que não sabe mostrar título junta ao texto: pior, mas sem quebrar.',
   },
   idioma: {
     obrigatoria: true,
@@ -70,6 +71,34 @@ export const CAPACIDADES = Object.freeze({
     forma: { ler: FN, gravar: FN, apagar: FN },
     porque:
       'Chave e valor em texto, no espaço roqueos:<app>:<chave>, no aparelho. É o mesmo formato das chaves que os apps já usavam no localStorage do RoqueOS, e é o que garante que ninguém perde o que tinha quando o app sai do núcleo. O sistema já nasce preso ao app: um app não lê a chave de outro.',
+  },
+
+  // As opcionais nasceram na Onda 4a do Goal 28 (0.2.0), com as Notas: o primeiro
+  // app que guarda na conta, usa a IA, salva nos Arquivos e é aberto por outro
+  // pedaço do sistema. O que cada uma garante está no arquivo dela.
+  colecoes: {
+    obrigatoria: false,
+    forma: { abrir: FN },
+    porque:
+      'abrir(nome) devolve { observar, criar, atualizar, apagar } sobre documentos na conta da pessoa, em tempo real e em todo aparelho dela. O app não fala com banco; o sistema tem o mapa de onde cada coleção de cada app mora, e é ele quem carimba criadoEm e atualizadoEm. atualizar troca só os campos enviados, para dois donos escreverem no mesmo documento sem um apagar o outro (a nota das Notas é o post-it da mesa). Detalhes em src/colecoes.js.',
+  },
+  ia: {
+    obrigatoria: false,
+    forma: { abrirPainel: FN },
+    porque:
+      'abrirPainel({ ancora, tipo, contexto, aplicar, acento, aoFechar }) abre o painel de IA do sistema dentro de um elemento do app, sobre o conteúdo que o app entrega, e devolve { fechar }. O RoqueOS tem um painel de IA só para todos os apps, e a chave dos agentes nunca chega ao app. Detalhes em src/ia.js.',
+  },
+  arquivos: {
+    obrigatoria: false,
+    forma: { salvar: FN },
+    porque:
+      'salvar({ nome, conteudo, tipo, pasta }) guarda um arquivo nos Arquivos da pessoa e devolve { nome, pasta }. A pasta é de uma lista curta, não um caminho livre, e nada é sobrescrito. Detalhes em src/arquivos.js.',
+  },
+  abertura: {
+    obrigatoria: false,
+    forma: { atual: FN, aoMudar: FN },
+    porque:
+      'atual() devolve o que quem abriu a janela mandou ({ nota: "note_1" }, ou {}), e aoMudar(fn) avisa o pedido novo quando a janela já aberta é chamada de novo, e devolve parar(). Sem isso, o post-it abre as Notas sempre na lista, e o segundo post-it clicado não muda nada. Detalhes em src/abertura.js.',
   },
 })
 
