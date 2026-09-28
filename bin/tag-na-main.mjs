@@ -14,12 +14,30 @@
 import { execFileSync } from 'node:child_process'
 
 /**
+ * O ambiente sem as variáveis `GIT_*`.
+ *
+ * Um hook do git exporta `GIT_DIR` (e às vezes `GIT_INDEX_FILE`) apontando para o repositório
+ * de quem chamou. Quem roda git com um `cwd` escolhido e herda esse ambiente fala com o
+ * repositório do hook, não com o do `cwd`, e não só para ler: numa worktree, o `yarn test` do
+ * pre-push fez o `git init` do teste gravar `core.bare = true` no clone e o `git commit` do
+ * teste andar o branch de verdade. Com `cwd` explícito, quem decide o repositório é o `cwd`.
+ *
+ * @param {NodeJS.ProcessEnv} [env]
+ * @returns {NodeJS.ProcessEnv}
+ */
+export function semVariaveisDoRepo(env = process.env) {
+  return Object.fromEntries(Object.entries(env).filter(([k]) => !k.startsWith('GIT_')))
+}
+
+/**
  * @param {string} commit
  * @param {{ main?: string, cwd?: string }} [opcoes]
  * @returns {{ ok: boolean, mensagem: string }}
  */
-export function tagNaMain(commit, { main = 'origin/main', cwd = process.cwd() } = {}) {
-  const git = (...args) => execFileSync('git', args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] })
+export function tagNaMain(commit, { main = 'origin/main', cwd } = {}) {
+  const env = cwd ? semVariaveisDoRepo() : process.env
+  const git = (...args) =>
+    execFileSync('git', args, { cwd: cwd ?? process.cwd(), env, stdio: ['ignore', 'pipe', 'pipe'] })
   let sha
   try {
     sha = git('rev-parse', '--verify', `${commit}^{commit}`).toString().trim()
