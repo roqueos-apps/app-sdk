@@ -44,6 +44,8 @@ describe('sistema falso', () => {
       eventos: [{ nome: 'abriu', dados: { de: 'teste' } }],
       arquivos: [],
       paineis: [],
+      pastasAbertas: [],
+      telaCheia: [],
     })
     f.mudarIdentidade({ uid: 'u1', nome: 'Ana' })
     assert.deepEqual(f.sistema.identidade.atual(), { uid: 'u1', nome: 'Ana' })

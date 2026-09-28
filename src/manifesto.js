@@ -16,6 +16,7 @@
 
 import { OPCIONAIS, CAPACIDADES, VERSAO_DO_CONTRATO } from './contrato.js'
 import { IDIOMAS, IDIOMAS_OBRIGATORIOS_DA_COMUNIDADE } from './idiomas.js'
+import { PASTAS_DE_ARQUIVOS, ehPadraoDeTipo } from './arquivos.js'
 
 /**
  * As categorias da Loja e do Launchpad, com o valor que o RoqueOS usa. `system`
@@ -51,6 +52,8 @@ const CAMPOS = new Set([
   'naLoja',
   'capacidades',
   'colecoes',
+  'pastas',
+  'abre',
   'autor',
   'licenca',
 ])
@@ -154,6 +157,35 @@ export function validarManifesto(m) {
     if (!usaColecoes) problemas.push('colecoes declaradas sem "colecoes" em capacidades')
   } else if (usaColecoes) {
     problemas.push('capacidades pede "colecoes": liste em "colecoes" os nomes que o app abre')
+  }
+
+  // As pastas que o app LISTA e mostra no Finder (0.3.0). Salvar é livre em qualquer
+  // pasta da lista; ler o que a pessoa já tem, só na pasta declarada aqui.
+  const usaArquivos = Array.isArray(caps) && caps.includes('arquivos')
+  if (m.pastas !== undefined) {
+    const lista = m.pastas
+    if (
+      !Array.isArray(lista) ||
+      lista.length === 0 ||
+      !lista.every((p) => PASTAS_DE_ARQUIVOS.includes(p))
+    )
+      problemas.push(`pastas: lista com as de ${PASTAS_DE_ARQUIVOS.join(', ')}`)
+    else if (new Set(lista).size !== lista.length) problemas.push('pastas: pasta repetida')
+    if (!usaArquivos) problemas.push('pastas declaradas sem "arquivos" em capacidades')
+  }
+
+  // Os tipos que o app abre pelo "abrir com" do Finder (0.3.0). O arquivo chega pela
+  // `abertura` e é lido com `arquivos.ler`, então as duas precisam estar declaradas.
+  if (m.abre !== undefined) {
+    const lista = m.abre
+    if (!Array.isArray(lista) || lista.length === 0 || !lista.every(ehPadraoDeTipo))
+      problemas.push('abre: lista de tipos como image/* ou application/pdf')
+    else if (new Set(lista).size !== lista.length) problemas.push('abre: tipo repetido')
+    const faltam = ['abertura', 'arquivos'].filter(
+      (c) => !(Array.isArray(caps) && caps.includes(c)),
+    )
+    if (faltam.length)
+      problemas.push(`abre precisa de ${faltam.map((c) => `"${c}"`).join(' e ')} em capacidades`)
   }
   return problemas
 }

@@ -19,9 +19,28 @@ export { VARIAVEIS_DO_SISTEMA } from './variaveis.js'
 // As peças das opcionais (0.2.0), para os três sistemas conferirem igual.
 export { ErroDoSistema, CODIGOS_DE_ERRO } from './erros.js'
 export { CARIMBOS, conferirCampos, conferirIdDeDocumento } from './colecoes.js'
-export { PASTAS_DE_ARQUIVOS, conferirArquivo } from './arquivos.js'
-export { TIPOS_DE_IA, conferirPedidoDeIa } from './ia.js'
+export {
+  PASTAS_DE_ARQUIVOS,
+  conferirArquivo,
+  conferirPasta,
+  conferirPastaDeclarada,
+  conferirTipos,
+  criarCofreDeRefs,
+  ehPadraoDeTipo,
+  entradaDeArquivo,
+  ordenarArquivos,
+  tipoCasa,
+} from './arquivos.js'
+export { MAXIMO_DE_ACOES_DE_IA, TIPOS_DE_IA, conferirPedidoDeIa } from './ia.js'
 export { criarAbertura } from './abertura.js'
+// As peças da 0.3.0: a tela cheia pedida ao sistema, e os anexos do app.
+export { criarTelaCheia } from './janela.js'
+export {
+  TAMANHO_MAXIMO_DE_ANEXO,
+  conferirConteudoDeAnexo,
+  conferirIdDeAnexo,
+  gerarIdDeAnexo,
+} from './anexos.js'
 
 const ID = /^[a-z][a-z0-9]*$/
 

@@ -47,6 +47,7 @@ describe('o app de teste passa inteiro', () => {
         'o app não importa o RoqueOS',
         'variáveis do sistema no contrato',
         'capacidades opcionais declaradas',
+        'pastas declaradas',
       ],
     )
     for (const s of secoes) assert.deepEqual(s.problemas, [], s.secao)

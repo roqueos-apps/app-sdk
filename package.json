@@ -1,6 +1,6 @@
 {
   "name": "@roqueos-apps/app-sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "O contrato entre o RoqueOS e um app: definirApp, as capacidades do sistema, o manifesto app.json, um sistema para rodar o app sozinho, um sistema falso para teste e o app check.",
   "license": "MIT",
   "author": "Roque Ribeiro",

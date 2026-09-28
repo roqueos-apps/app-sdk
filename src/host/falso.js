@@ -8,22 +8,28 @@
 //
 // As opcionais estão todas aqui, com a mesma semântica do sistema do RoqueOS,
 // para o teste do app pegar o erro que o RoqueOS pegaria (gravar sem conta,
-// coleção fora do mapa, campo de carimbo mandado pelo app).
+// coleção fora do mapa, campo de carimbo mandado pelo app, pasta não declarada,
+// ref fabricada ou de outra sessão, anexo de outro app).
 
 import { VERSAO_DO_CONTRATO } from '../contrato.js'
 import { IDIOMA_CANONICO, normalizarIdioma } from '../idiomas.js'
-import { ErroDoSistema } from '../erros.js'
-import { conferirArquivo } from '../arquivos.js'
 import { conferirPedidoDeIa } from '../ia.js'
 import { criarAbertura } from '../abertura.js'
+import { criarTelaCheia } from '../janela.js'
 import { armazenamentoDoApp, armazenamentoEmMemoria } from './armazenamento.js'
 import { criarColecoesEmMemoria } from './colecoes-em-memoria.js'
+import { criarArquivosEmMemoria } from './arquivos-em-memoria.js'
+import { criarAnexosEmMemoria } from './anexos-em-memoria.js'
+
+export { criarBancoDeAnexos } from './anexos-em-memoria.js'
 
 /**
  * @param {{
  *   appId?: string, idioma?: string, identidade?: { uid: string|null, nome: string|null },
  *   modoLeve?: boolean, colecoes?: string[], abertura?: object, agora?: () => number,
- * }} [opcoes]
+ *   pastas?: string[], telaCheiaPermitida?: boolean, bancoDeAnexos?: Map<string, Blob>,
+ * }} [opcoes] `bancoDeAnexos` dividido entre dois sistemas falsos é o mesmo app
+ *   reaberto: o anexo guardado num o outro lê (`criarBancoDeAnexos` no pacote).
  */
 export function criarSistemaFalso({
   appId = 'teste',
@@ -33,13 +39,23 @@ export function criarSistemaFalso({
   colecoes = [],
   abertura = {},
   agora = () => Date.now(),
+  pastas = [],
+  telaCheiaPermitida = true,
+  bancoDeAnexos,
 } = {}) {
   let idiomaAtual = normalizarIdioma(idioma)
   let quem = { ...identidade }
   const ouvintesDeIdioma = new Set()
   const ouvintesDeIdentidade = new Set()
   const storage = armazenamentoEmMemoria()
-  const registro = { avisos: [], eventos: [], arquivos: [], paineis: [] }
+  const registro = {
+    avisos: [],
+    eventos: [],
+    arquivos: [],
+    paineis: [],
+    pastasAbertas: [],
+    telaCheia: [],
+  }
 
   const ouvir = (conjunto) => (fn) => {
     conjunto.add(fn)
@@ -59,6 +75,25 @@ export function criarSistemaFalso({
     agora,
   })
   const aberta = criarAbertura(abertura)
+  const guardados = criarArquivosEmMemoria({
+    pastas,
+    uidAtual: () => quem.uid,
+    agora,
+    aoSalvar: (a) => registro.arquivos.push(a),
+    aoAbrirPasta: (pasta) => registro.pastasAbertas.push(pasta),
+  })
+  const deAnexos = criarAnexosEmMemoria({
+    appId,
+    uidAtual: () => quem.uid,
+    ...(bancoDeAnexos ? { banco: bancoDeAnexos } : {}),
+  })
+  let permitirTelaCheia = telaCheiaPermitida
+  const tela = criarTelaCheia({
+    aplicar: async (ligar) => {
+      registro.telaCheia.push(ligar)
+      return ligar && permitirTelaCheia
+    },
+  })
   let painel = null
 
   function fecharPainel() {
@@ -107,6 +142,7 @@ export function criarSistemaFalso({
           acento: p.acento ?? null,
           titulo: p.titulo ?? null,
           aplica: typeof p.aplicar === 'function',
+          acoes: (p.acoes ?? []).map((a) => a.id),
           aberto: true,
         }
         registro.paineis.push(entrada)
@@ -119,15 +155,10 @@ export function criarSistemaFalso({
         })
       },
     },
-    arquivos: {
-      async salvar(pedido) {
-        const a = conferirArquivo(pedido)
-        if (!quem.uid) throw new ErroDoSistema('sem-conta')
-        registro.arquivos.push(a)
-        return { nome: a.nome, pasta: a.pasta }
-      },
-    },
+    arquivos: guardados.arquivos,
     abertura: aberta.abertura,
+    janela: tela.janela,
+    anexos: deAnexos.anexos,
   }
 
   return {
@@ -151,6 +182,34 @@ export function criarSistemaFalso({
     },
     /** A janela aberta é chamada de novo, com outro pedido. */
     mudarAbertura: (novo) => aberta.mudar(novo),
+    /**
+     * Os Arquivos por baixo: `semear(pasta, arquivo)` põe um arquivo como se a
+     * pessoa já o tivesse, e `guardados(pasta)` mostra o que há, como o Finder.
+     */
+    arquivos: {
+      semear: guardados.semear,
+      guardados: guardados.guardados,
+      /** As refs emitidas nesta sessão, para o teste conferir que não vazam. */
+      refs: guardados.refs,
+    },
+    /** Os anexos por baixo: `guardados()` lista os ids deste app na conta atual. */
+    anexos: { guardados: deAnexos.guardados },
+    /**
+     * A pessoa usa o "abrir com" do Finder neste app: o arquivo entra nos Arquivos
+     * (fora das pastas que o app declara) e chega pela abertura. Devolve a ref.
+     */
+    abrirCom(arquivo) {
+      const entregue = guardados.entregar(arquivo)
+      aberta.mudar({ arquivo: entregue })
+      return entregue.ref
+    },
+    /** A tela cheia, do jeito que a pessoa e o navegador mexem nela. */
+    telaCheia: {
+      /** A pessoa sai por conta própria (Esc, o gesto do aparelho). */
+      sair: () => tela.mudar(false),
+      /** O próximo pedido é recusado, como o navegador faz sem gesto da pessoa. */
+      recusar: (recusa = true) => (permitirTelaCheia = !recusa),
+    },
     /** O painel de IA aberto agora, do jeito que a pessoa mexe nele. */
     ia: {
       aberto: () => (painel ? { ...painel.entrada } : null),
@@ -170,6 +229,7 @@ export function criarSistemaFalso({
       ouvintesDeIdentidade.size +
       memoria.ouvintesVivos() +
       aberta.ouvintesVivos() +
+      tela.ouvintesVivos() +
       (painel ? 1 : 0),
   }
 }

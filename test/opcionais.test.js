@@ -192,8 +192,73 @@ describe('ia', () => {
       acento: null,
       titulo: null,
       aplica: false,
+      acoes: [],
       aberto: true,
     })
+  })
+
+  test('as ações do app (0.3.0) chegam conferidas, e erradas dizem o que está errado', () => {
+    const temas = {
+      id: 'temas',
+      rotulo: 'Agrupar em temas',
+      prompt: 'Agrupe...',
+      icone: 'category',
+    }
+    const acoes = [temas, { id: 'acoes', rotulo: 'Tirar as ações', prompt: 'Extraia...' }]
+    const p = conferirPedidoDeIa({ ancora, tipo: 'read', contexto: () => '', acoes })
+    assert.deepEqual(p.acoes, [
+      temas,
+      { id: 'acoes', rotulo: 'Tirar as ações', prompt: 'Extraia...' },
+    ])
+    assert.equal(Object.isFrozen(p.acoes[0]), true)
+    // Os limites valem inteiros: seis ações, rótulo de 60 e pedido de 2000 passam.
+    const noLimite = Array.from({ length: 6 }, (_, i) => ({
+      id: `a${i}`,
+      rotulo: 'x'.repeat(60),
+      prompt: 'y'.repeat(2000),
+    }))
+    assert.equal(
+      conferirPedidoDeIa({ ancora, tipo: 'read', contexto: () => '', acoes: noLimite }).acoes
+        .length,
+      6,
+    )
+    assert.equal('acoes' in conferirPedidoDeIa({ ancora, tipo: 'read', contexto: () => '' }), false)
+    const f = criarSistemaFalso()
+    f.sistema.ia.abrirPainel({ ancora, tipo: 'read', contexto: () => '', acoes })
+    assert.deepEqual(f.ia.aberto().acoes, ['temas', 'acoes'])
+    const ruins = [
+      [{ ...temas, id: 'Temas' }, /acoes\[0\]\.id/],
+      [{ ...temas, rotulo: '' }, /acoes\[0\]\.rotulo/],
+      [{ ...temas, rotulo: 'x'.repeat(61) }, /acoes\[0\]\.rotulo/],
+      [{ ...temas, prompt: ' ' }, /acoes\[0\]\.prompt/],
+      [{ ...temas, prompt: 'x'.repeat(2001) }, /acoes\[0\]\.prompt/],
+      [{ ...temas, icone: 'Category Icon' }, /acoes\[0\]\.icone/],
+    ]
+    for (const [acao, padrao] of ruins) {
+      assert.throws(
+        () => conferirPedidoDeIa({ ancora, tipo: 'read', contexto: () => '', acoes: [acao] }),
+        (e) => e.codigo === 'valor-invalido' && padrao.test(e.message),
+        padrao.source,
+      )
+    }
+    assert.throws(
+      () => conferirPedidoDeIa({ ancora, tipo: 'read', contexto: () => '', acoes: [temas, temas] }),
+      /acoes\[1\]\.id/,
+    )
+    assert.throws(
+      () =>
+        conferirPedidoDeIa({
+          ancora,
+          tipo: 'read',
+          contexto: () => '',
+          acoes: Array.from({ length: 7 }, (_, i) => ({ ...temas, id: `a${i}` })),
+        }),
+      /até 6/,
+    )
+    assert.throws(
+      () => conferirPedidoDeIa({ ancora, tipo: 'read', contexto: () => '', acoes: 'temas' }),
+      /acoes: lista/,
+    )
   })
 
   test('a pessoa aplica o resultado no app, e fecha', async () => {
@@ -256,11 +321,22 @@ describe('arquivos', () => {
       comCodigo('sem-conta'),
     )
     const f = criarSistemaFalso({ identidade: ANA })
+    const salvo = await f.sistema.arquivos.salvar({
+      nome: 'a.md',
+      conteudo: 'x',
+      tipo: 'text/markdown',
+    })
     assert.deepEqual(
-      await f.sistema.arquivos.salvar({ nome: 'a.md', conteudo: 'x', tipo: 'text/markdown' }),
-      { nome: 'a.md', pasta: 'Documentos' },
+      { ...salvo, ref: typeof salvo.ref },
+      {
+        nome: 'a.md',
+        pasta: 'Documentos',
+        ref: 'string',
+      },
     )
     assert.equal(f.registro.arquivos.length, 1)
+    // A ref de salvar lê o que foi salvo (0.3.0).
+    assert.equal(await (await f.sistema.arquivos.ler(salvo.ref)).text(), 'x')
   })
 })
 
@@ -390,10 +466,9 @@ describe('sistema de desenvolvimento: as opcionais', () => {
       janela: janelaFalsa(),
       registro: { info: (l) => linhas.push(l), debug() {} },
     })
-    assert.deepEqual(await sistema.arquivos.salvar({ nome: 'a.md', conteudo: 'x' }), {
-      nome: 'a.md',
-      pasta: 'Documentos',
-    })
+    const salvo = await sistema.arquivos.salvar({ nome: 'a.md', conteudo: 'x' })
+    assert.deepEqual([salvo.nome, salvo.pasta], ['a.md', 'Documentos'])
+    assert.match(salvo.ref, /^arq\./)
     await assert.rejects(
       sistema.arquivos.salvar({ nome: 'a.md', conteudo: 'x', pasta: 'Raiz' }),
       comCodigo('pasta-invalida'),

@@ -16,7 +16,14 @@ function elemento(tag) {
     className: '',
     classList: {
       add: (c) => classes.add(c),
+      remove: (c) => classes.delete(c),
+      toggle: (c, ligar = !classes.has(c)) => (ligar ? classes.add(c) : classes.delete(c), ligar),
       contains: (c) => classes.has(c) || el.className.split(' ').includes(c),
+    },
+    insertBefore(filho, antes) {
+      const i = el.filhos.indexOf(antes)
+      el.filhos.splice(i < 0 ? el.filhos.length : i, 0, filho)
+      return filho
     },
     appendChild(filho) {
       el.filhos.push(filho)

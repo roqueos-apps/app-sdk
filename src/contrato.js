@@ -22,9 +22,13 @@
 // vira atalho para o app alcançar o que não devia. O app lista no `app.json` as
 // opcionais que usa, e o `mount` recusa o sistema que não as tem.
 //
-// Versionamento: capacidade nova e opcional é mudança menor; mudar a forma de
-// uma que existe é versão nova do contrato, e o sistema recusa o app que pede
-// outra versão em vez de quebrar em runtime.
+// Versionamento: capacidade nova e opcional é mudança menor, e acrescentar função
+// a uma opcional também, porque o app de antes continua servido pelo sistema novo
+// (a 0.3.0 deu `listar`, `ler` e `abrirPasta` a `arquivos`). Tirar função, ou mudar
+// a forma ou o sentido de uma que existe, é versão nova do contrato, e o sistema
+// recusa o app que pede outra versão em vez de quebrar em runtime. No RoqueOS o
+// app e o sistema usam uma cópia só do SDK, então app novo em sistema velho não
+// chega a montar.
 
 export const VERSAO_DO_CONTRATO = 1
 
@@ -80,25 +84,37 @@ export const CAPACIDADES = Object.freeze({
     obrigatoria: false,
     forma: { abrir: FN },
     porque:
-      'abrir(nome) devolve { observar, criar, atualizar, apagar } sobre documentos na conta da pessoa, em tempo real e em todo aparelho dela. O app não fala com banco; o sistema tem o mapa de onde cada coleção de cada app mora, e é ele quem carimba criadoEm e atualizadoEm. atualizar troca só os campos enviados, para dois donos escreverem no mesmo documento sem um apagar o outro (a nota das Notas é o post-it da mesa). Detalhes em src/colecoes.js.',
+      'abrir(nome) devolve { observar, ler, criar, atualizar, apagar } sobre documentos na conta da pessoa, em tempo real e em todo aparelho dela. ler(id) (0.3.0) traz um documento só, sem assinar a coleção: a Lousa guarda cada quadro num documento grande e abre um de cada vez. O app não fala com banco; o sistema tem o mapa de onde cada coleção de cada app mora, e é ele quem carimba criadoEm e atualizadoEm. atualizar troca só os campos enviados, para dois donos escreverem no mesmo documento sem um apagar o outro (a nota das Notas é o post-it da mesa). Detalhes em src/colecoes.js.',
   },
   ia: {
     obrigatoria: false,
     forma: { abrirPainel: FN },
     porque:
-      'abrirPainel({ ancora, tipo, contexto, aplicar, acento, aoFechar }) abre o painel de IA do sistema dentro de um elemento do app, sobre o conteúdo que o app entrega, e devolve { fechar }. O RoqueOS tem um painel de IA só para todos os apps, e a chave dos agentes nunca chega ao app. Detalhes em src/ia.js.',
+      'abrirPainel({ ancora, tipo, contexto, aplicar, acento, aoFechar, acoes }) abre o painel de IA do sistema dentro de um elemento do app, sobre o conteúdo que o app entrega, e devolve { fechar }. acoes (0.3.0) soma ações do app às do catálogo, com o rótulo no idioma de quem usa. O RoqueOS tem um painel de IA só para todos os apps, e a chave dos agentes nunca chega ao app. Detalhes em src/ia.js.',
   },
   arquivos: {
     obrigatoria: false,
-    forma: { salvar: FN },
+    forma: { salvar: FN, listar: FN, ler: FN, abrirPasta: FN },
     porque:
-      'salvar({ nome, conteudo, tipo, pasta }) guarda um arquivo nos Arquivos da pessoa e devolve { nome, pasta }. A pasta é de uma lista curta, não um caminho livre, e nada é sobrescrito. Detalhes em src/arquivos.js.',
+      'salvar({ nome, conteudo, tipo, pasta }) guarda um arquivo nos Arquivos da pessoa e devolve { nome, pasta, ref }. listar(pasta, { tipos }) devolve [{ ref, nome, tipo, tamanho, modificadoEm }], ler(ref) devolve o Blob e abrirPasta(pasta) mostra a pasta no Finder (0.3.0). A pasta é de uma lista curta, não um caminho livre; listar e abrir só a que o app declara em pastas no app.json; a ref é opaca e vale só nesta sessão; nada é sobrescrito. Detalhes em src/arquivos.js.',
   },
   abertura: {
     obrigatoria: false,
     forma: { atual: FN, aoMudar: FN },
     porque:
-      'atual() devolve o que quem abriu a janela mandou ({ nota: "note_1" }, ou {}), e aoMudar(fn) avisa o pedido novo quando a janela já aberta é chamada de novo, e devolve parar(). Sem isso, o post-it abre as Notas sempre na lista, e o segundo post-it clicado não muda nada. Detalhes em src/abertura.js.',
+      'atual() devolve o que quem abriu a janela mandou ({ nota: "note_1" }, ou {}), e aoMudar(fn) avisa o pedido novo quando a janela já aberta é chamada de novo, e devolve parar(). Sem isso, o post-it abre as Notas sempre na lista, e o segundo post-it clicado não muda nada. O "abrir com" do Finder chega aqui como { arquivo: { ref, nome, tipo } } (0.3.0). Detalhes em src/abertura.js.',
+  },
+  anexos: {
+    obrigatoria: false,
+    forma: { guardar: FN, ler: FN, apagar: FN },
+    porque:
+      'guardar(blob) devolve { id }, ler(id) devolve o Blob e apagar(id) tira (0.3.0). São bytes do app, e não arquivos da pessoa: a imagem colada na Lousa, que o quadro guarda pelo id e reabre amanhã, em outro aparelho. O id dura e é do app e da conta; nunca vira URL, porque um link durável do Storage entregue a um app de terceiro sai pela rede e continua valendo. Sem conta rejeita, e há um teto de tamanho. Detalhes em src/anexos.js.',
+  },
+  janela: {
+    obrigatoria: false,
+    forma: { telaCheia: FN, emTelaCheia: FN, aoMudarTelaCheia: FN },
+    porque:
+      'telaCheia(true | false) pede a tela cheia à janela e resolve com o estado real; emTelaCheia() diz o estado; aoMudarTelaCheia(fn) avisa quando a pessoa sai por conta própria, e devolve parar(). É o sistema quem faz, porque a tela cheia do RoqueOS escreve no <html>, o que um app não pode. Detalhes em src/janela.js.',
   },
 })
 
