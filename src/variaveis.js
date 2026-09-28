@@ -32,4 +32,17 @@ export const VARIAVEIS_DO_SISTEMA = Object.freeze([
   // As sombras do tema, com o alpha já dentro: 30% e 50%.
   '--ros-shadow-30',
   '--ros-shadow-50',
+  // 0.2.0, com o kit de interface (`@roqueos-apps/ui`): as bases do tema em "r, g, b", que
+  // são o que um tema do RoqueOS redefine (`temas.scss`). Com elas o kit compõe qualquer
+  // degrau (`rgba(var(--ros-fill-rgb), .08)`) e acompanha o tema, em vez de copiar os
+  // quarenta degraus nomeados (`--ros-fill-08`, `--ros-text-70`) que o sistema deriva delas.
+  '--ros-text-rgb',
+  '--ros-fill-rgb',
+  '--ros-line-rgb',
+  '--ros-scrim-rgb',
+  '--ros-shadow-rgb',
+  // A superfície do tema (janela, folha, cartão), para o painel opaco do kit.
+  '--ros-surface-0-rgb',
+  // O vermelho de ação destrutiva, que um tema pode mudar.
+  '--ros-danger-rgb',
 ])

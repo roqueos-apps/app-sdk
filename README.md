@@ -126,11 +126,14 @@ ignorado em silêncio.
 
 Um app de primeira parte está no mesmo documento do RoqueOS e enxerga as custom properties
 do tema. Usar uma delas é dependência de verdade que nenhum grafo de build vê, então ela vira
-contrato: [`src/variaveis.js`](src/variaveis.js) lista as que um app pode usar
-(`--ros-white-rgb`, `--ros-black-rgb`, `--ros-border-dim`, `--ros-text-100`, `--ros-shadow-30`
-e `--ros-shadow-50`), o `app check` reprova qualquer
-outra, e o RoqueOS tem um teste que reprova se alguma delas sumir do tema. O prefixo `--ros-`
-é do sistema: a variável do app usa outro (`--calc-fundo`).
+contrato: [`src/variaveis.js`](src/variaveis.js) lista as que um app pode usar, o `app check`
+reprova qualquer outra, e o RoqueOS tem um teste que reprova se alguma delas sumir do tema. A
+lista nasceu com as seis da Calculadora (`--ros-white-rgb`, `--ros-black-rgb`,
+`--ros-border-dim`, `--ros-text-100`, `--ros-shadow-30`, `--ros-shadow-50`) e, na 0.2.0,
+ganhou as bases que um tema redefine, para o kit de interface acompanhar o tema:
+`--ros-text-rgb`, `--ros-fill-rgb`, `--ros-line-rgb`, `--ros-scrim-rgb`, `--ros-shadow-rgb`,
+`--ros-surface-0-rgb` e `--ros-danger-rgb`. O prefixo `--ros-` é do sistema: a variável do
+app usa outro (`--calc-fundo`).
 
 ## Regras
 

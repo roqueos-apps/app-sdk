@@ -28,6 +28,10 @@ continua o 1: um app 0.1.0 monta igual.
 - `app.json` ganha `colecoes`, os nomes das coleções que o app abre (obrigatório com a
   capacidade `colecoes`), para o RoqueOS conferir o mapa no build.
 - `app check` reprova a opcional usada no `src/` sem estar em `capacidades`.
+- `VARIAVEIS_DO_SISTEMA` ganha as bases que um tema do RoqueOS redefine, para o kit de
+  interface (`@roqueos-apps/ui`) acompanhar o tema: `--ros-text-rgb`, `--ros-fill-rgb`,
+  `--ros-line-rgb`, `--ros-scrim-rgb`, `--ros-shadow-rgb`, `--ros-surface-0-rgb` e
+  `--ros-danger-rgb`.
 - Sistema falso com as quatro, e com `mudarAbertura`, `colecoes.semear`,
   `colecoes.guardado`, `ia.aplicar` e `ia.fechar` para o teste do app.
 

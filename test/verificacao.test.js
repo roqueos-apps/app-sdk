@@ -17,6 +17,7 @@ import {
   semComentarios,
   ehDoRoqueOS,
 } from '../src/verificacao.js'
+import { VARIAVEIS_DO_SISTEMA } from '../src/variaveis.js'
 
 const FIXTURE = fileURLToPath(new URL('./fixtures/app-ok', import.meta.url))
 
@@ -197,7 +198,7 @@ describe('cada regra reprova o que diz', () => {
       )
     })
     assert.deepEqual(conferirVariaveis(p), [
-      'src/x.scss:2 usa --ros-accent, que não está entre as variáveis do sistema que um app pode usar (--ros-white-rgb, --ros-black-rgb, --ros-border-dim, --ros-text-100, --ros-shadow-30, --ros-shadow-50)',
+      `src/x.scss:2 usa --ros-accent, que não está entre as variáveis do sistema que um app pode usar (${VARIAVEIS_DO_SISTEMA.join(', ')})`,
       'src/x.scss:3 declara --ros-white-rgb: o prefixo --ros- é do sistema, a variável do app usa outro',
       'src/y.js:1 declara --ros-black-rgb: o prefixo --ros- é do sistema, a variável do app usa outro',
       'src/y.js:2 declara --ros-border-dim: o prefixo --ros- é do sistema, a variável do app usa outro',
