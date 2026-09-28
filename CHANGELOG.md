@@ -58,6 +58,13 @@ RoqueOS. O contrato continua o 1: um app 0.2.0 monta igual. A 0.2.0 e a 0.3.0 en
 
 - O texto do contrato diz que acrescentar função a uma opcional é versão menor.
 
+### Corrigido
+
+- O teste do `tag-na-main` herdava o `GIT_DIR` do hook de pre-push. Numa worktree, o `git init`
+  e o `git commit` dele escreviam no clone de verdade (gravaram `core.bare = true` e andaram um
+  branch). O repositório de teste e o `tagNaMain` com `cwd` explícito rodam o git sem as
+  variáveis `GIT_*`, e um teste prova que o `GIT_DIR` de fora não é tocado.
+
 ## [0.2.0] - 2026-09-27
 
 As quatro capacidades opcionais que as Notas precisam para sair do RoqueOS. O contrato
