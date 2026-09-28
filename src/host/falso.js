@@ -9,7 +9,7 @@
 // As opcionais estão todas aqui, com a mesma semântica do sistema do RoqueOS,
 // para o teste do app pegar o erro que o RoqueOS pegaria (gravar sem conta,
 // coleção fora do mapa, campo de carimbo mandado pelo app, pasta não declarada,
-// ref fabricada ou de outra sessão).
+// ref fabricada ou de outra sessão, anexo de outro app).
 
 import { VERSAO_DO_CONTRATO } from '../contrato.js'
 import { IDIOMA_CANONICO, normalizarIdioma } from '../idiomas.js'
@@ -19,13 +19,17 @@ import { criarTelaCheia } from '../janela.js'
 import { armazenamentoDoApp, armazenamentoEmMemoria } from './armazenamento.js'
 import { criarColecoesEmMemoria } from './colecoes-em-memoria.js'
 import { criarArquivosEmMemoria } from './arquivos-em-memoria.js'
+import { criarAnexosEmMemoria } from './anexos-em-memoria.js'
+
+export { criarBancoDeAnexos } from './anexos-em-memoria.js'
 
 /**
  * @param {{
  *   appId?: string, idioma?: string, identidade?: { uid: string|null, nome: string|null },
  *   modoLeve?: boolean, colecoes?: string[], abertura?: object, agora?: () => number,
- *   pastas?: string[], telaCheiaPermitida?: boolean,
- * }} [opcoes]
+ *   pastas?: string[], telaCheiaPermitida?: boolean, bancoDeAnexos?: Map<string, Blob>,
+ * }} [opcoes] `bancoDeAnexos` dividido entre dois sistemas falsos é o mesmo app
+ *   reaberto: o anexo guardado num o outro lê (`criarBancoDeAnexos` no pacote).
  */
 export function criarSistemaFalso({
   appId = 'teste',
@@ -37,6 +41,7 @@ export function criarSistemaFalso({
   agora = () => Date.now(),
   pastas = [],
   telaCheiaPermitida = true,
+  bancoDeAnexos,
 } = {}) {
   let idiomaAtual = normalizarIdioma(idioma)
   let quem = { ...identidade }
@@ -76,6 +81,11 @@ export function criarSistemaFalso({
     agora,
     aoSalvar: (a) => registro.arquivos.push(a),
     aoAbrirPasta: (pasta) => registro.pastasAbertas.push(pasta),
+  })
+  const deAnexos = criarAnexosEmMemoria({
+    appId,
+    uidAtual: () => quem.uid,
+    ...(bancoDeAnexos ? { banco: bancoDeAnexos } : {}),
   })
   let permitirTelaCheia = telaCheiaPermitida
   const tela = criarTelaCheia({
@@ -147,6 +157,7 @@ export function criarSistemaFalso({
     arquivos: guardados.arquivos,
     abertura: aberta.abertura,
     janela: tela.janela,
+    anexos: deAnexos.anexos,
   }
 
   return {
@@ -180,6 +191,8 @@ export function criarSistemaFalso({
       /** As refs emitidas nesta sessão, para o teste conferir que não vazam. */
       refs: guardados.refs,
     },
+    /** Os anexos por baixo: `guardados()` lista os ids deste app na conta atual. */
+    anexos: { guardados: deAnexos.guardados },
     /**
      * A pessoa usa o "abrir com" do Finder neste app: o arquivo entra nos Arquivos
      * (fora das pastas que o app declara) e chega pela abertura. Devolve a ref.

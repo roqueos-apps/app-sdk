@@ -67,7 +67,7 @@ versão menor, porque o app de antes continua servido; tirar função, ou mudar 
 sentido de uma que existe, é versão nova do contrato, e o sistema recusa o app que pede outra
 versão em vez de quebrar em runtime.
 
-#### As opcionais (0.2.0 com as Notas, 0.3.0 com a Câmera, a Captura e os visualizadores)
+#### As opcionais (0.2.0 com as Notas, 0.3.0 com a Lousa, a Câmera, a Captura e os visualizadores)
 
 O app lista em `capacidades` no `app.json` as que usa; o `mount` recusa o sistema que não as
 tem, e o `app check` reprova o app que usa uma sem listar. Quando uma falha, ela rejeita com
@@ -81,6 +81,7 @@ finge que deu certo.
 | `ia`       | `abrirPainel({ ancora, tipo, contexto, aplicar, aoFechar })`          | o painel de IA do sistema sobre o conteúdo do app; a chave nunca chega ao app ([`src/ia.js`](src/ia.js))                             |
 | `arquivos` | `salvar`, `listar(pasta, { tipos })`, `ler(ref)`, `abrirPasta(pasta)` | os Arquivos da pessoa, por pasta e por ref opaca; listar e abrir só a pasta declarada (0.3.0) ([`src/arquivos.js`](src/arquivos.js)) |
 | `abertura` | `atual()`, `aoMudar(fn)`                                              | o que quem abriu a janela mandou; o "abrir com" do Finder chega como `{ arquivo }` (0.3.0) ([`src/abertura.js`](src/abertura.js))    |
+| `anexos`   | `guardar(blob)` → `{ id }`, `ler(id)`, `apagar(id)`                   | bytes do app na conta, por um id que dura e nunca vira URL: a imagem do quadro da Lousa (0.3.0) ([`src/anexos.js`](src/anexos.js))   |
 | `janela`   | `telaCheia(bool)`, `emTelaCheia()`, `aoMudarTelaCheia(fn)`            | a tela cheia feita pelo sistema, que é quem pode escrever no `<html>` (0.3.0) ([`src/janela.js`](src/janela.js))                     |
 
 Em `colecoes`, as datas são do sistema: cada documento chega com `criadoEm` e `atualizadoEm` em
@@ -99,6 +100,15 @@ devolvem uma `ref` opaca, e `ler(ref)` devolve o Blob. A ref vale só para este 
 e não se guarda no `armazenamento`; a de ontem rejeita com `ref-invalida`. O "abrir com" do
 Finder entrega uma ref pela `abertura` ao app que declara o tipo em `abre`, e esse arquivo o
 app lê mesmo sem ter declarado a pasta dele: quem concedeu foi a pessoa, ao escolher o app.
+
+Em `anexos`, o que se guarda é do app, e não um arquivo que a pessoa organiza: a imagem colada
+no quadro da Lousa. `guardar(blob)` devolve `{ id }` (`anx_` e 24 letras e dígitos), que o app
+guarda dentro do próprio dado e que abre em toda sessão e todo aparelho da pessoa; ao abrir,
+`ler(id)` devolve o Blob, com o tipo, e o app desenha por `URL.createObjectURL`. O id é do app
+e da conta: o de outro app, o de outra conta e o apagado rejeitam com `nao-encontrado`. **Nunca
+há URL durável**: um link do Storage entregue a um app sai pela rede e continua valendo, e o id
+só vira bytes passando pelo sistema. Sem conta rejeita com `sem-conta`; acima de 10 MB, com
+`grande-demais`, antes de subir um byte.
 
 ### O manifesto `app.json`
 
@@ -226,8 +236,11 @@ No teste, `criarSistemaFalso({ pastas })` devolve o `sistema` e o que o app fez
 `registro.pastasAbertas`, `registro.telaCheia`), e mexe no mundo em volta como o RoqueOS mexe:
 `mudarIdioma`, `mudarIdentidade`, `mudarAbertura`, `colecoes.semear` e `colecoes.guardado`,
 `ia.aplicar`/`ia.fechar` para a pessoa usar o painel de IA, `arquivos.semear` e
-`arquivos.guardados` para os Arquivos, `abrirCom` para o "abrir com" do Finder, e
-`telaCheia.sair`/`telaCheia.recusar` para a pessoa e o navegador mexerem na tela cheia.
+`arquivos.guardados` para os Arquivos, `abrirCom` para o "abrir com" do Finder,
+`telaCheia.sair`/`telaCheia.recusar` para a pessoa e o navegador mexerem na tela cheia, e
+`anexos.guardados()` para os anexos. Dois sistemas falsos com o mesmo
+`bancoDeAnexos: criarBancoDeAnexos()` são o mesmo app reaberto: o anexo guardado num o outro
+lê, que é como o teste prova que o quadro volta com a imagem.
 
 ## Estrutura
 
@@ -246,10 +259,12 @@ src/
   arquivos.js       as pastas, o pedido de salvar, o filtro de tipos e o cofre de refs
   abertura.js       criarAbertura, a abertura que os três sistemas usam
   janela.js         criarTelaCheia, a tela cheia que os três sistemas usam
+  anexos.js         o id de anexo, o teto de tamanho e o que guardar confere
   host/
     armazenamento.js  o espaço roqueos:<app>:<chave>
     colecoes-em-memoria.js  colecoes em memória, para o falso e o de desenvolvimento
     arquivos-em-memoria.js  arquivos em memória, com o cofre de refs, para os mesmos dois
+    anexos-em-memoria.js  anexos em memória, presos ao app e à conta, para os mesmos dois
     desenvolvimento.js  o sistema com o navegador puro, e a janela falsa
     falso.js          o sistema em memória, para teste
 bin/app.mjs         o app check
@@ -303,8 +318,9 @@ on instead of RoqueOS. It is the sibling of `jogo-sdk`, which did the same for g
   and the viewers, lets `arquivos` list, read and show a folder (`Documentos`, `Imagens`,
   `Videos`) through opaque per-session refs, and only the folders the app declares in `pastas`;
   delivers the Finder's "open with" as `{ arquivo }` in `abertura` to apps declaring the type in
-  `abre`; adds `colecoes.ler(id)` for one document; and adds `janela`, full screen done by the
-  system. A failing capability rejects with an `ErroDoSistema` carrying a `codigo`; it never
+  `abre`; adds `colecoes.ler(id)` for one document; adds `anexos`, the app's own bytes in the
+  user's account under a durable id that never becomes a URL (the image pasted on a Whiteboard
+  board); and adds `janela`, full screen done by the system. A failing capability rejects with an `ErroDoSistema` carrying a `codigo`; it never
   pretends to succeed.
 - `app.json` declares the permanent `id`, name and description in the ten languages (first
   party) or in pt-BR and en-US (community), icon, colour, category, window size, layer,

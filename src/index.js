@@ -33,8 +33,14 @@ export {
 } from './arquivos.js'
 export { TIPOS_DE_IA, conferirPedidoDeIa } from './ia.js'
 export { criarAbertura } from './abertura.js'
-// As peças da 0.3.0: a tela cheia pedida ao sistema.
+// As peças da 0.3.0: a tela cheia pedida ao sistema, e os anexos do app.
 export { criarTelaCheia } from './janela.js'
+export {
+  TAMANHO_MAXIMO_DE_ANEXO,
+  conferirConteudoDeAnexo,
+  conferirIdDeAnexo,
+  gerarIdDeAnexo,
+} from './anexos.js'
 
 const ID = /^[a-z][a-z0-9]*$/
 

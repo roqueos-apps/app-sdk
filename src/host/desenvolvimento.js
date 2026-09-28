@@ -18,6 +18,7 @@ import { criarTelaCheia } from '../janela.js'
 import { armazenamentoDoApp, armazenamentoEmMemoria, storageDoNavegador } from './armazenamento.js'
 import { criarColecoesEmMemoria } from './colecoes-em-memoria.js'
 import { criarArquivosEmMemoria } from './arquivos-em-memoria.js'
+import { criarAnexosEmMemoria } from './anexos-em-memoria.js'
 
 /** Idiomas que correm da direita para a esquerda. */
 const RTL = new Set(['ar-AR'])
@@ -107,6 +108,10 @@ export function criarSistemaDeDesenvolvimento({
     aoAbrirPasta: (pasta) => registro.info(`[${appId}] abriria o Finder em ${pasta}`),
   })
   const tela = criarTelaCheia({ aplicar: async (ligar) => Boolean(await aoTelaCheia(ligar)) })
+  // Os anexos ficam em memória, como os Arquivos: duram enquanto a página está aberta
+  // (fechar e abrir o app de novo os acha) e somem no F5. No RoqueOS eles moram na
+  // conta; aqui a imagem de um quadro salvo antes do F5 aparece quebrada, e é isso.
+  const deAnexos = criarAnexosEmMemoria({ appId, uidAtual: () => quem.uid })
   let painel = null
   let idiomaAtual = normalizarIdioma(idioma ?? daUrl ?? nav.language)
   const ouvintesDeIdioma = new Set()
@@ -193,6 +198,7 @@ export function criarSistemaDeDesenvolvimento({
     arquivos: guardados.arquivos,
     abertura: aberta.abertura,
     janela: tela.janela,
+    anexos: deAnexos.anexos,
   }
 
   return {

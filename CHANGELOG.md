@@ -7,7 +7,7 @@ mudar a forma ou o sentido de uma capacidade é versão nova do contrato.
 
 ## [0.3.0] - sem data até o PR #4 entrar na `main`
 
-O que a Câmera, a Captura de tela, os visualizadores, o Letreiro e a Lousa precisam para sair do
+O que a Lousa, a Câmera, a Captura de tela, os visualizadores e o Letreiro precisam para sair do
 RoqueOS. O contrato continua o 1: um app 0.2.0 monta igual. A tag só sai depois que a 0.2.0
 entrar na `main` (sem squash) e esta versão for rebaseada sobre ela.
 
@@ -27,13 +27,20 @@ entrar na `main` (sem squash) e esta versão for rebaseada sobre ela.
   pasta dele.
 - `colecoes.abrir(nome).ler(id)`: um documento só, sem assinar a coleção (null quando não
   existe ou sem conta). Para documento grande que se abre um de cada vez, como o quadro da Lousa.
+- `anexos`, opcional nova: `guardar(blob)` devolve `{ id }`, `ler(id)` devolve o Blob e
+  `apagar(id)` tira. Bytes do app na conta da pessoa (a imagem colada no quadro da Lousa), por
+  um id que dura entre sessões e aparelhos e que é do app e da conta. Nunca há URL durável no
+  contrato. Sem conta rejeita; acima de 10 MB (`TAMANHO_MAXIMO_DE_ANEXO`), `grande-demais`.
+  `gerarIdDeAnexo`, `conferirIdDeAnexo` e `conferirConteudoDeAnexo` para os três sistemas.
 - `janela`, opcional nova: `telaCheia(true | false)` resolve com o estado real,
   `emTelaCheia()` e `aoMudarTelaCheia(fn)`. É o sistema quem faz a tela cheia, porque no RoqueOS
   ela escreve no `<html>`, o que um app não pode.
 - `app.json` ganha `pastas` (com `arquivos`) e `abre` (padrões de tipo como `image/*`, com
   `abertura` e `arquivos`).
 - `app check` reprova `listar('X')` ou `abrirPasta('X')` no `src/` sem `X` em `pastas`.
-- Códigos de erro `pasta-nao-declarada`, `ref-invalida` e `nao-encontrado`.
+- Códigos de erro `pasta-nao-declarada`, `ref-invalida`, `nao-encontrado` e `grande-demais`.
+- Sistema falso com `bancoDeAnexos` (`criarBancoDeAnexos`, para o mesmo app reaberto) e
+  `anexos.guardados()`.
 - Sistema falso com `pastas` e `telaCheiaPermitida`, `registro.pastasAbertas` e
   `registro.telaCheia`, `arquivos.semear`/`arquivos.guardados`, `abrirCom` e
   `telaCheia.sair`/`telaCheia.recusar`.

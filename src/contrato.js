@@ -104,6 +104,12 @@ export const CAPACIDADES = Object.freeze({
     porque:
       'atual() devolve o que quem abriu a janela mandou ({ nota: "note_1" }, ou {}), e aoMudar(fn) avisa o pedido novo quando a janela já aberta é chamada de novo, e devolve parar(). Sem isso, o post-it abre as Notas sempre na lista, e o segundo post-it clicado não muda nada. O "abrir com" do Finder chega aqui como { arquivo: { ref, nome, tipo } } (0.3.0). Detalhes em src/abertura.js.',
   },
+  anexos: {
+    obrigatoria: false,
+    forma: { guardar: FN, ler: FN, apagar: FN },
+    porque:
+      'guardar(blob) devolve { id }, ler(id) devolve o Blob e apagar(id) tira (0.3.0). São bytes do app, e não arquivos da pessoa: a imagem colada na Lousa, que o quadro guarda pelo id e reabre amanhã, em outro aparelho. O id dura e é do app e da conta; nunca vira URL, porque um link durável do Storage entregue a um app de terceiro sai pela rede e continua valendo. Sem conta rejeita, e há um teto de tamanho. Detalhes em src/anexos.js.',
+  },
   janela: {
     obrigatoria: false,
     forma: { telaCheia: FN, emTelaCheia: FN, aoMudarTelaCheia: FN },
