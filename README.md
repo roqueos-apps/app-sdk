@@ -42,8 +42,9 @@ flowchart LR
 - `definirApp({ id, capacidades, montar })` cria o app. `mount` confere o sistema antes de
   montar e recusa, com a lista do que falta, o sistema que não cumpre o contrato.
 - `montar(el, sistema, { windowId, ativo })` recebe o elemento onde o app vive e cria **o
-  próprio app Vue** (ou o que for) dentro dele. Nenhuma store, nenhum plugin e nenhum estilo
-  global do RoqueOS chega lá dentro. Devolve `{ ativar(ativo), desmontar() }`.
+  próprio app Vue** (ou o que for) dentro dele. Nenhuma store e nenhum plugin do RoqueOS
+  chega lá dentro. O CSS global chega, e só dentro do RoqueOS: veja
+  [O CSS que o app não herda](#o-css-que-o-app-não-herda). Devolve `{ ativar(ativo), desmontar() }`.
 - `verificarSistema(sistema)` diz o que falta: capacidade ausente, forma errada, versão de
   contrato diferente. Todos os problemas de uma vez.
 - `validarManifesto(appJson)` confere o `app.json`.
@@ -163,6 +164,29 @@ ganhou as bases que um tema redefine, para o kit de interface acompanhar o tema:
 `--ros-text-rgb`, `--ros-fill-rgb`, `--ros-line-rgb`, `--ros-scrim-rgb`, `--ros-shadow-rgb`,
 `--ros-surface-0-rgb` e `--ros-danger-rgb`. O prefixo `--ros-` é do sistema: a variável do
 app usa outro (`--calc-fundo`).
+
+### O CSS que o app não herda
+
+Pelo mesmo motivo, o CSS global do RoqueOS vale dentro do app quando ele roda no RoqueOS, e
+não vale no `yarn dev` nem no teste: o `box-sizing: border-box` do Quasar, a fonte do corpo e,
+quando o RoqueOS aplicar, a direção do árabe. Um app que depende disso sem declarar muda de
+cara conforme o lugar. A Calculadora saiu cortada nas bordas no `yarn dev` (medido em
+27/09/2026) porque o padding somava à largura de 100%, e dentro do RoqueOS o Quasar escondia o
+defeito. Declare na raiz do app o que ele precisa:
+
+```scss
+.meu-app {
+  box-sizing: border-box;
+}
+.meu-app *,
+.meu-app *::before,
+.meu-app *::after {
+  box-sizing: inherit;
+}
+```
+
+E, se o layout não pode espelhar em RTL (teclado de calculadora, visor de número), `dir="ltr"`
+no elemento raiz.
 
 ## Regras
 
@@ -307,7 +331,10 @@ on instead of RoqueOS. It is the sibling of `jogo-sdk`, which did the same for g
 - `definirApp({ id, capacidades, montar })` defines an app; `mount` verifies the system first
   and refuses one that breaks the contract, listing every problem.
 - `montar(el, sistema, { windowId, ativo })` creates the app's own Vue app inside `el` and
-  returns `{ ativar, desmontar }`. No RoqueOS store, plugin or global style reaches inside.
+  returns `{ ativar, desmontar }`. No RoqueOS store or plugin reaches inside. Global CSS
+  does, but only inside RoqueOS (Quasar's `box-sizing: border-box`, the body font, and
+  right-to-left direction once RoqueOS applies it), not in `yarn dev` or tests: declare at the
+  app's root what it relies on, as the Calculator does.
 - Contract v1 has six capabilities, taken from `jogo-sdk`, which proves them in twenty games:
   `identidade`, `avisar`, `idioma`, `desempenho`, `metricas` and `armazenamento`. New
   capabilities are born optional, with a written reason, in the wave of the first app that
