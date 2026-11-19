@@ -5,6 +5,16 @@ usa [versionamento semântico](https://semver.org/lang/pt-BR/) sobre o contrato:
 nova e opcional é versão menor, e acrescentar função a uma opcional também; tirar função ou
 mudar a forma ou o sentido de uma capacidade é versão nova do contrato.
 
+## [Não lançado]
+
+### Adicionado
+
+- Documentação no padrão da família (`docs/docs.json`): o principal em inglês em `docs/` (GETTING-STARTED,
+  ARCHITECTURE, REFERENCE, OPERATIONS, WHEN-IT-BREAKS, GLOSSARY, EXTENDING, INTEGRATIONS,
+  THREAT-MODEL, TESTING) e o par em português em `docs/pt-BR/`. O README passa a ser em inglês,
+  com o par em `README.pt-BR.md`; o CONTRIBUTING também, com o par em `docs/pt-BR/CONTRIBUTING.md`.
+  Nenhuma mudança de código nem de contrato.
+
 ## [0.3.0] - 2026-09-28
 
 O que a Lousa, a Câmera, a Captura de tela, os visualizadores e o Letreiro precisam para sair do
