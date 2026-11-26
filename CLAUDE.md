@@ -11,3 +11,4 @@ qualquer coisa: mudar a forma de uma capacidade é versão nova do contrato e al
 - Sem script de instalação no package.json; sem dependência de runtime.
 - Todo commit com `Signed-off-by` (`git commit -s`): o workflow `dco` reprova sem.
 - Português do Brasil no código e nos commits.
+- Documentação: comece por `docs/INDEX.md` (inglês principal, par em `docs/pt-BR/`); mudança de comportamento muda o documento no mesmo commit, nos dois idiomas, e o `roqueos-docs` tem de sair `ok`.
